@@ -62,8 +62,8 @@ export default function ResumeApp() {
             {/* Header */}
             <div className="text-center border-b border-gray-200 pb-4">
               <h1 className="text-xl font-bold text-gray-900">Nikhil Raj</h1>
-              <p className="text-sm text-gray-600 mt-1">Full Stack Engineer · AI Applications</p>
-              <p className="text-xs text-gray-500 mt-1">nikhilraj@email.com · github.com/nikhilraj · linkedin.com/in/nikhilraj</p>
+              <p className="text-sm text-gray-600 mt-1">Backend Engineer | Go | TypeScript | Distributed Systems</p>
+              <p className="text-[11px] text-gray-500 mt-1">raj.nikhil.tech@gmail.com · github.com/nikhiilraj · linkedin.com/in/nikhilraj-dev</p>
             </div>
 
             {/* Education */}
@@ -71,8 +71,8 @@ export default function ResumeApp() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Education</h2>
               <div className="flex justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">B.Tech Computer Science</p>
-                  <p className="text-xs text-gray-500">Your University</p>
+                  <p className="text-sm font-semibold text-gray-800">B.Tech Computer Science & Engineering</p>
+                  <p className="text-xs text-gray-500">IIIT, Nagpur</p>
                 </div>
                 <p className="text-xs text-gray-500">2021 – 2025</p>
               </div>
@@ -83,11 +83,11 @@ export default function ResumeApp() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Experience</h2>
               <div>
                 <div className="flex justify-between">
-                  <p className="text-sm font-semibold text-gray-800">Backend Engineer Intern</p>
-                  <p className="text-xs text-gray-500">2024</p>
+                  <p className="text-sm font-semibold text-gray-800">Corporate Lead – Iotics & ECell</p>
+                  <p className="text-xs text-gray-500">2024 – 2025</p>
                 </div>
-                <p className="text-xs text-gray-500 mb-1">Company Name · Remote</p>
-                <p className="text-xs text-gray-600">Built and deployed REST APIs, integrated LLM features, improved backend performance by 30%.</p>
+                <p className="text-xs text-gray-500 mb-1">IIIT Nagpur</p>
+                <p className="text-xs text-gray-600 text-justify">Spearheaded outreach and negotiated 8L+ INR in corporate sponsorships. Directed a cross-functional team of 20+ members to deliver events for 10,000+ attendees.</p>
               </div>
             </div>
 
@@ -95,7 +95,7 @@ export default function ResumeApp() {
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Skills</h2>
               <p className="text-xs text-gray-600 leading-relaxed">
-                React · Next.js · Node.js · Python · FastAPI · LangChain · PostgreSQL · Redis · Docker · Git
+                Go · TypeScript · Python · Node.js · PostgreSQL · AWS (EC2, Lambda) · Docker · Terraform · PostGIS
               </p>
             </div>
 
@@ -103,8 +103,12 @@ export default function ResumeApp() {
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Projects</h2>
               <div className="space-y-2">
-                {['IntelliChat — LangChain RAG customer support platform', 'DocuMind — PDF Q&A SaaS with vector search', 'FlowAPI — High-performance API gateway'].map((p) => (
-                  <p key={p} className="text-xs text-gray-600">• {p}</p>
+                {[
+                  'RoomScout — Cloud-Native Multi-Tenant Rental Marketplace',
+                  'Orbit — System.Alpha — Geospatial Emergency Coordination',
+                  'SharkTankLang — Custom DSL Interpreter Ecosystem'
+                ].map((p) => (
+                  <p key={p} className="text-xs text-gray-600 leading-tight">• {p}</p>
                 ))}
               </div>
             </div>

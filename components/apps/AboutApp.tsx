@@ -52,20 +52,18 @@ export default function AboutApp() {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
+              overflow: 'hidden',
             }}
           >
-            <span
+            <img
+              src={bio.avatar}
+              alt={bio.name}
               style={{
-                fontFamily: 'var(--font-serif)',
-                fontStyle: 'italic',
-                fontSize: '1.3rem',
-                color: 'var(--accent)',
-                lineHeight: 1,
-                userSelect: 'none',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
               }}
-            >
-              NR
-            </span>
+            />
           </div>
 
           <div>

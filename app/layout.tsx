@@ -28,22 +28,22 @@ const BASE_URL = 'https://nikhilraj.dev';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
-  title: 'Nikhil Raj — Frontend Developer',
+  title: 'Nikhil Raj — Fullstack Developer',
   description:
-    'Frontend developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
+    'Fullstack developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
   openGraph: {
-    title: 'Nikhil Raj — Frontend Developer',
+    title: 'Nikhil Raj — Fullstack Developer',
     description:
-      'Frontend developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
+      'Fullstack developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
     type: 'website',
     url: BASE_URL,
     images: [{ url: '/og-image.svg', width: 1200, height: 630, alt: 'Nikhil Raj' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nikhil Raj — Frontend Developer',
+    title: 'Nikhil Raj — Fullstack Developer',
     description:
-      'Frontend developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
+      'Fullstack developer specializing in React, Next.js, and TypeScript. 4 years, 30+ projects.',
     images: ['/og-image.svg'],
   },
   other: {
