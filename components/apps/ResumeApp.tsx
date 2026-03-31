@@ -1,10 +1,11 @@
 'use client';
+import { File } from '@phosphor-icons/react';
 import { bio } from '@/lib/data';
 import Window from '@/components/os/Window';
 
 export default function ResumeApp() {
   return (
-    <Window id="resume" title="resume.pdf — Preview" icon="📄">
+    <Window id="resume" title="resume.pdf — Preview" icon={<File weight="bold" size={14} />}>
       <div className="h-full flex flex-col">
         {/* Preview toolbar */}
         <div
@@ -12,12 +13,12 @@ export default function ResumeApp() {
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg">📄</span>
+            <File weight="bold" size={16} style={{ color: 'var(--text-secondary)' }} />
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
                 Nikhil_Raj_Resume.pdf
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>1 page</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>1 page</p>
             </div>
           </div>
           <a
@@ -25,19 +26,30 @@ export default function ResumeApp() {
             download="Nikhil_Raj_Resume.pdf"
             className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
             style={{
-              background: 'rgba(100,255,218,0.1)',
-              border: '1px solid rgba(100,255,218,0.3)',
+              background: 'rgba(230,169,62,0.08)',
+              border: '1px solid rgba(230,169,62,0.25)',
               color: 'var(--accent)',
               fontFamily: 'var(--font-mono)',
               textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(230,169,62,0.14)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,169,62,0.4)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(230,169,62,0.08)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(230,169,62,0.25)';
             }}
           >
             ↓ Download
           </a>
         </div>
 
-        {/* PDF content — placeholder until real PDF added */}
-        <div className="flex-1 overflow-hidden bg-[#1a1a2e] flex items-center justify-center p-4">
+        {/* PDF content */}
+        <div
+          className="flex-1 overflow-hidden flex items-center justify-center p-4"
+          style={{ background: 'rgba(255,255,255,0.02)' }}
+        >
           <div
             className="w-full max-w-md h-full max-h-[440px] rounded-lg overflow-y-auto p-8 space-y-5"
             style={{
@@ -96,10 +108,6 @@ export default function ResumeApp() {
                 ))}
               </div>
             </div>
-
-            <p className="text-[10px] text-center text-gray-400 pt-2">
-              Drop your real resume.pdf in /public to replace this preview
-            </p>
           </div>
         </div>
       </div>

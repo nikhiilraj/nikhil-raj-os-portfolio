@@ -1,156 +1,293 @@
 'use client';
 import { motion } from 'framer-motion';
+import { User } from '@phosphor-icons/react';
 import { bio, timelineItems } from '@/lib/data';
 import TypewriterText from '@/components/ui/TypewriterText';
 import Window from '@/components/os/Window';
 
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+function SocialLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        color: 'var(--text-secondary)',
+        textDecoration: 'none',
+        transition: 'color 0.15s ease',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--accent)'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
+    >
+      {children}
+    </a>
+  );
+}
+
 export default function AboutApp() {
   return (
-    <Window id="about" title="about.app" icon="👤">
-      <div className="h-full overflow-y-auto flex flex-row">
-        {/* Left panel */}
-        <div
-          className="flex-shrink-0 w-52 flex flex-col items-center py-6 px-4 gap-4"
-          style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}
+    <Window id="about" title="about.nikhil" icon={<User weight="bold" size={14} />}>
+      <div className="h-full overflow-y-auto" style={{ padding: '24px 28px 32px' }}>
+        {/* Header: avatar + name + status */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: EASE }}
+          style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}
         >
-          {/* Avatar */}
-          <div className="relative">
-            <div
-              className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center text-5xl"
+          {/* Squircle avatar */}
+          <div
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 16,
+              background: 'rgba(230,169,62,0.06)',
+              border: '1.5px solid rgba(230,169,62,0.22)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <span
               style={{
-                border: '2px solid var(--accent)',
-                boxShadow: '0 0 24px rgba(100,255,218,0.2)',
-                background: 'rgba(100,255,218,0.05)',
+                fontFamily: 'var(--font-serif)',
+                fontStyle: 'italic',
+                fontSize: '1.3rem',
+                color: 'var(--accent)',
+                lineHeight: 1,
+                userSelect: 'none',
               }}
             >
-              🧑‍💻
-            </div>
-            <div
-              className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2"
-              style={{ background: '#28c840', borderColor: 'var(--bg)' }}
-            />
+              NR
+            </span>
           </div>
 
-          <div className="text-center">
-            <h2 className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>
+          <div>
+            <h2
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                margin: 0,
+              }}
+            >
               {bio.name}
             </h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-              {bio.status}
-            </p>
-          </div>
-
-          {/* Info rows */}
-          <div className="w-full space-y-2 pt-2">
-            {[
-              { icon: '🎓', label: bio.university },
-              { icon: '📍', label: bio.location },
-              { icon: '📧', label: bio.email },
-            ].map((item) => (
-              <div key={item.label} className="flex items-start gap-2">
-                <span className="text-sm flex-shrink-0">{item.icon}</span>
-                <span className="text-[10px] leading-tight break-all" style={{ color: 'var(--text-muted)' }}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Social links */}
-          <div className="flex gap-2 mt-auto pt-4">
-            {[
-              { label: 'GH', href: bio.github },
-              { label: 'LI', href: bio.linkedin },
-              { label: 'TW', href: bio.twitter },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] px-2 py-1 rounded transition-all"
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 5 }}>
+              <span className="relative flex" style={{ width: 6, height: 6 }}>
+                <span
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                  style={{ background: 'var(--accent)' }}
+                />
+                <span
+                  className="relative inline-flex rounded-full"
+                  style={{ width: 6, height: 6, background: 'var(--accent)' }}
+                />
+              </span>
+              <span
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  color: 'var(--text-muted)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLElement).style.color = 'var(--accent)';
-                  (e.target as HTMLElement).style.borderColor = 'var(--border-accent)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLElement).style.color = 'var(--text-muted)';
-                  (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                  fontSize: '0.65rem',
+                  color: 'var(--accent)',
                 }}
               >
-                {s.label}
-              </a>
-            ))}
+                {bio.status}
+              </span>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Right panel */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Typewriter headline */}
-          <div>
-            <p className="text-xs mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-              $ whoami
-            </p>
-            <h1 className="text-xl font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
-              <TypewriterText
-                words={[
-                  'Full Stack Engineer.',
-                  'Backend Specialist.',
-                  'AI Application Builder.',
-                  'Final Year Student.',
-                ]}
-                speed={70}
-              />
-            </h1>
-          </div>
-
-          {/* Description */}
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            {bio.description}
+        {/* $ whoami typewriter */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.45, ease: EASE }}
+          style={{ marginBottom: 20 }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.7rem',
+              color: 'var(--accent)',
+              marginBottom: 8,
+            }}
+          >
+            $ whoami
           </p>
+          <h1
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontStyle: 'italic',
+              fontSize: '1.35rem',
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              lineHeight: 1.3,
+              margin: 0,
+            }}
+          >
+            <TypewriterText
+              words={[
+                'Full Stack Engineer.',
+                'Backend Specialist.',
+                'AI Application Builder.',
+                'Final Year Student.',
+              ]}
+              speed={70}
+            />
+          </h1>
+        </motion.div>
 
-          {/* Timeline */}
-          <div>
-            <p className="text-xs mb-4" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-              $ cat journey.log
-            </p>
-            <div className="relative space-y-4">
-              {/* Vertical line */}
-              <div
-                className="absolute left-[22px] top-0 bottom-0 w-px"
-                style={{ background: 'rgba(100,255,218,0.15)' }}
-              />
+        {/* Description */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14, duration: 0.45, ease: EASE }}
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: '0.85rem',
+            lineHeight: 1.65,
+            color: 'var(--text-secondary)',
+            marginBottom: 20,
+          }}
+        >
+          {bio.description}
+        </motion.p>
+
+        {/* Details grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.45, ease: EASE }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px 16px',
+            marginBottom: 28,
+            padding: '14px 16px',
+            background: 'rgba(255,255,255,0.025)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 8,
+          }}
+        >
+          {[
+            { label: 'university', value: bio.university },
+            { label: 'location',   value: bio.location   },
+            { label: 'email',      value: bio.email       },
+          ].map((item) => (
+            <div key={item.label}>
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.6rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'var(--text-tertiary)',
+                  marginBottom: 2,
+                }}
+              >
+                {item.label}
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '0.75rem',
+                  color: 'var(--text-primary)',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.26, duration: 0.45, ease: EASE }}
+          style={{ marginBottom: 28 }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.7rem',
+              color: 'var(--accent)',
+              marginBottom: 16,
+            }}
+          >
+            $ cat journey.log
+          </p>
+          <div style={{ position: 'relative' }}>
+            {/* Vertical line */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 4,
+                top: 6,
+                bottom: 6,
+                width: 1,
+                background: 'rgba(230,169,62,0.15)',
+              }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               {timelineItems.map((item, i) => (
                 <motion.div
                   key={item.year}
-                  initial={{ opacity: 0, x: -12 }}
+                  initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1, duration: 0.4 }}
-                  className="flex gap-4 relative"
+                  transition={{ delay: 0.3 + i * 0.07, duration: 0.4, ease: EASE }}
+                  style={{ display: 'flex', gap: 16, position: 'relative' }}
                 >
                   {/* Dot */}
                   <div
-                    className="w-[10px] h-[10px] rounded-full flex-shrink-0 mt-1 ml-[18px]"
-                    style={{ background: 'var(--accent)', boxShadow: '0 0 6px rgba(100,255,218,0.5)' }}
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: '50%',
+                      background: 'var(--accent)',
+                      flexShrink: 0,
+                      marginTop: 3,
+                    }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
+                  <div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
                       <span
-                        className="text-[10px]"
-                        style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.65rem',
+                          color: 'var(--accent)',
+                        }}
                       >
                         {item.year}
                       </span>
-                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-sans)',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                        }}
+                      >
                         {item.title}
                       </span>
                     </div>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    <p
+                      style={{
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: '0.75rem',
+                        color: 'var(--text-secondary)',
+                        marginTop: 2,
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {item.desc}
                     </p>
                   </div>
@@ -158,7 +295,19 @@ export default function AboutApp() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Social text links */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.45, ease: EASE }}
+          style={{ display: 'flex', gap: 20 }}
+        >
+          <SocialLink href={bio.github}>GitHub</SocialLink>
+          <SocialLink href={bio.linkedin}>LinkedIn</SocialLink>
+          <SocialLink href={bio.twitter}>Twitter</SocialLink>
+        </motion.div>
       </div>
     </Window>
   );

@@ -7,7 +7,7 @@ import TrafficLights from '@/components/ui/TrafficLights';
 type Props = {
   id: AppId;
   title: string;
-  icon: string;
+  icon: ReactNode;
   children: ReactNode;
   minWidth?: number;
   minHeight?: number;
@@ -27,10 +27,10 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
     <AnimatePresence>
       <motion.div
         key={id}
-        initial={{ scale: 0.85, opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12, scale: 0.97 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.85, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+        exit={{ opacity: 0, y: 12, scale: 0.97 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
         drag
         dragMomentum={false}
         dragElastic={0}
@@ -51,22 +51,38 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
           minWidth,
           minHeight,
         }}
-        className="rounded-[12px] overflow-hidden flex flex-col shadow-2xl no-select"
+        className="rounded-[12px] overflow-hidden flex flex-col no-select"
         whileDrag={{ scale: 1.01 }}
       >
         {/* Glass background */}
         <div
           className="absolute inset-0 rounded-[12px]"
           style={{
-            background: 'rgba(6, 7, 20, 0.82)',
+            background: 'rgba(12,13,18,0.9)',
             backdropFilter: 'blur(32px)',
             WebkitBackdropFilter: 'blur(32px)',
             border: isActive
-              ? '1px solid rgba(124,106,255,0.28)'
+              ? '1px solid rgba(230,169,62,0.15)'
               : '1px solid rgba(255,255,255,0.08)',
             boxShadow: isActive
-              ? '0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(124,106,255,0.12)'
+              ? '0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(230,169,62,0.08)'
               : '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
+          }}
+        />
+
+        {/* Refraction edge */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)',
+            pointerEvents: 'none',
+            zIndex: 1,
+            borderRadius: '12px 12px 0 0',
           }}
         />
 
@@ -77,8 +93,19 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
         >
           <TrafficLights id={id} />
           <div className="flex items-center gap-2 ml-2">
-            <span className="text-base leading-none">{icon}</span>
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {icon}
+            </span>
+            <span
+              className="text-xs font-medium"
+              style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
+            >
               {title}
             </span>
           </div>

@@ -39,7 +39,18 @@ export default function TypewriterText({
   return (
     <span className={className}>
       {displayed}
-      <span className="animate-pulse text-[var(--accent)]">|</span>
+      <span
+        className="cursor-blink"
+        style={{
+          display: 'inline-block',
+          width: 2,
+          height: '0.9em',
+          background: 'var(--accent)',
+          verticalAlign: 'text-bottom',
+          borderRadius: 1,
+          marginLeft: 2,
+        }}
+      />
     </span>
   );
 }

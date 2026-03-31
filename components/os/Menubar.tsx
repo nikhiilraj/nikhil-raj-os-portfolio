@@ -101,30 +101,6 @@ export default function Menubar() {
           Nikhil.OS
         </span>
 
-        {/* Open-to-work badge */}
-        <div className="flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span
-              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
-              style={{ background: 'var(--accent)' }}
-            />
-            <span
-              className="relative inline-flex rounded-full h-2 w-2"
-              style={{ background: 'var(--accent)' }}
-            />
-          </span>
-          <span
-            className="text-[10px] px-2 py-0.5 rounded-full"
-            style={{
-              background: 'rgba(230,169,62,0.1)',
-              border: '1px solid rgba(230,169,62,0.2)',
-              color: 'var(--accent)',
-              fontFamily: 'var(--font-mono)',
-            }}
-          >
-            {bio.status}
-          </span>
-        </div>
       </div>
 
       {/* ── CENTER: Menus ──────────────────────────────────── */}

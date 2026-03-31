@@ -20,7 +20,7 @@ function fibonacciSphere(n: number): Array<{ x: number; y: number; z: number }> 
   });
 }
 
-export default function IconCloud({ slugs, color = '7c6aff' }: Props) {
+export default function IconCloud({ slugs, color = 'e6a93e' }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const rotRef = useRef({ x: 0.2, y: 0 });
@@ -72,8 +72,8 @@ export default function IconCloud({ slugs, color = '7c6aff' }: Props) {
         const opacity = Math.max(0.12, (z2 + 1.6) / 2.6);
         const scale = Math.max(0.45, (z2 + 1.9) / 2.9);
         const glow = z2 > 0.2
-          ? `drop-shadow(0 0 6px rgba(124,106,255,0.75))`
-          : `drop-shadow(0 0 2px rgba(124,106,255,0.2))`;
+          ? `drop-shadow(0 0 6px rgba(230,169,62,0.75))`
+          : `drop-shadow(0 0 2px rgba(230,169,62,0.2))`;
 
         el.style.transform = `translate(calc(-50% + ${px.toFixed(1)}px), calc(-50% + ${py.toFixed(1)}px)) scale(${scale.toFixed(3)})`;
         el.style.opacity = opacity.toFixed(3);
