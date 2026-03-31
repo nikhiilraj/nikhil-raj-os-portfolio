@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { bio } from '@/lib/data';
 import { useStore } from '@/lib/store';
@@ -15,7 +15,7 @@ type TermLine =
   | { kind: 'link';   text: string; href: string }
   | { kind: 'blank' };
 
-const LINES: TermLine[] = [
+const STATIC_LINES: TermLine[] = [
   { kind: 'cmd',    text: 'whoami' },
   { kind: 'out',    text: 'Nikhil Raj — full stack developer' },
   { kind: 'blank' },
@@ -34,6 +34,22 @@ const LINES: TermLine[] = [
   { kind: 'link',   text: 'resume.pdf ↗',            href: bio.resume },
 ];
 
+// ── Easter egg command definitions ─────────────────────────────────────────────
+type EggEntry =
+  | { kind: 'input';  text: string }
+  | { kind: 'output'; text: string }
+  | { kind: 'error';  text: string };
+
+const COMMANDS: Record<string, (email: string) => EggEntry[]> = {
+  help:   () => [{ kind: 'output', text: 'available commands: whoami, hire, stack, clear' }],
+  whoami: () => [{ kind: 'output', text: 'Nikhil Raj — full stack developer' }],
+  stack:  () => [
+    { kind: 'output', text: 'React · Next.js · TypeScript' },
+    { kind: 'output', text: 'Tailwind · Framer Motion · Three.js' },
+  ],
+  hire: (email) => [{ kind: 'output', text: `opening email client for ${email}…` }],
+};
+
 // ── Root — hides when any window is open ──────────────────────────────────────
 export default function HeroZone() {
   const anyOpen = useStore((s) =>
@@ -43,16 +59,12 @@ export default function HeroZone() {
   return <HeroContent />;
 }
 
-// ── Main layout ────────────────────────────────────────────────────────────────
+// ── Main layout (non-fixed — lives inside Desktop's scroll canvas) ─────────────
 function HeroContent() {
   return (
-    <div
-      className="fixed left-0 right-0 flex flex-col items-center justify-center pointer-events-none"
-      style={{ top: 40, bottom: 80, zIndex: 50 }}
-    >
+    <div className="flex flex-col items-center justify-center pointer-events-none w-full">
       <NameDisplay />
 
-      {/* Version / subtitle */}
       <motion.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -76,23 +88,30 @@ function HeroContent() {
   );
 }
 
-// ── Name with stroke-to-fill reveal ──────────────────────────────────────────
+// ── Name with stroke-to-fill reveal + letter-spacing hover ────────────────────
 function NameDisplay() {
+  const [hovered, setHovered] = useState(false);
+
   const baseStyle: React.CSSProperties = {
     fontFamily: 'var(--font-serif)',
     fontStyle: 'italic',
     fontSize: 'clamp(5rem, 14vw, 11rem)',
     fontWeight: 400,
-    letterSpacing: '-0.04em',
     lineHeight: 0.9,
     display: 'block',
     userSelect: 'none',
     whiteSpace: 'nowrap',
+    transition: 'letter-spacing 0.3s ease',
+    letterSpacing: hovered ? '-0.02em' : '-0.04em',
   };
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      {/* Stroke layer — always visible, provides structure */}
+    <div
+      style={{ position: 'relative', display: 'inline-block', pointerEvents: 'auto' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Stroke layer — always visible */}
       <span
         aria-hidden
         style={{
@@ -105,7 +124,7 @@ function NameDisplay() {
         Nikhil Raj
       </span>
 
-      {/* Fill layer — gradient clips in left → right */}
+      {/* Fill layer — clips in left → right */}
       <motion.span
         aria-label="Nikhil Raj"
         initial={{ clipPath: 'inset(0 100% 0 0)' }}
@@ -130,189 +149,210 @@ function NameDisplay() {
   );
 }
 
-// ── Terminal card ─────────────────────────────────────────────────────────────
+// ── Terminal card with spotlight border + easter egg ──────────────────────────
 function TerminalCard() {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // ── Spotlight border mouse tracking ──────────────────────────
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  }, []);
+
+  // ── Easter egg state ──────────────────────────────────────────
+  const [focused,   setFocused]   = useState(false);
+  const [inputBuf,  setInputBuf]  = useState('');
+  const [eggHistory, setEggHistory] = useState<EggEntry[]>([]);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom when history grows
+  useEffect(() => {
+    if (focused) bottomRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [eggHistory, inputBuf, focused]);
+
+  // Keydown handler
+  useEffect(() => {
+    if (!focused) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setFocused(false); return; }
+      if (e.key === 'Backspace') { setInputBuf((b) => b.slice(0, -1)); return; }
+      if (e.key === 'Enter') {
+        const cmd = inputBuf.trim().toLowerCase();
+        setEggHistory((h) => {
+          const next: EggEntry[] = [...h, { kind: 'input', text: inputBuf }];
+          if (cmd === 'clear') return [];
+          if (cmd === 'hire') {
+            setTimeout(() => { window.location.href = `mailto:${bio.email}`; }, 600);
+            return [...next, ...COMMANDS.hire(bio.email)];
+          }
+          const fn = COMMANDS[cmd];
+          if (fn) return [...next, ...fn(bio.email)];
+          if (cmd !== '') return [...next, { kind: 'error', text: `command not found: ${cmd}` }];
+          return next;
+        });
+        setInputBuf('');
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        setInputBuf((b) => b + e.key);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [focused, inputBuf]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.0, duration: 0.7, ease: EASE }}
-      style={{
-        pointerEvents: 'auto',
-        width: 560,
-        maxWidth: 'calc(100vw - 32px)',
-        background: '#111114',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: 12,
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow:
-          '0 32px 80px rgba(230,169,62,0.06), 0 4px 24px rgba(0,0,0,0.55)',
-      }}
+      // Spotlight wrapper
+      ref={wrapperRef}
+      className="terminal-spotlight"
+      onMouseMove={handleMouseMove}
+      style={{ pointerEvents: 'auto', maxWidth: 'calc(100vw - 32px)', width: 560 }}
     >
-      {/* Top-edge glass refraction line */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 1,
-          background:
-            'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
-          zIndex: 3,
-          pointerEvents: 'none',
-        }}
-      />
-      {/* Inner top glow */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 56,
-          background:
-            'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
+      {/* Spotlight ring — shown only on hover */}
+      <div className="spotlight-ring" aria-hidden />
 
-      {/* Title bar */}
+      {/* Card */}
       <div
+        role="region"
+        aria-label="Terminal — click to interact"
+        tabIndex={0}
+        onFocus={() => setFocused(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false);
+        }}
+        onClick={() => { setFocused(true); wrapperRef.current?.querySelector<HTMLElement>('[tabindex]')?.focus(); }}
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: 40,
-          padding: '0 14px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(255,255,255,0.02)',
+          background: '#111114',
+          border: `1px solid ${focused ? 'rgba(230,169,62,0.2)' : 'rgba(255,255,255,0.06)'}`,
+          borderRadius: 12,
+          overflow: 'hidden',
           position: 'relative',
-          zIndex: 2,
-          gap: 10,
+          boxShadow: focused
+            ? '0 32px 80px rgba(230,169,62,0.1), 0 4px 24px rgba(0,0,0,0.55)'
+            : '0 32px 80px rgba(230,169,62,0.06), 0 4px 24px rgba(0,0,0,0.55)',
+          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+          cursor: focused ? 'text' : 'default',
+          outline: 'none', // handled by :focus-visible in CSS
         }}
       >
-        <TrafficLights />
-        <span
+        {/* Top-edge refraction line */}
+        <div
+          aria-hidden
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 12,
-            color: 'var(--text-tertiary)',
+            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+            zIndex: 3, pointerEvents: 'none',
+          }}
+        />
+        {/* Inner top glow */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 56,
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%)',
+            pointerEvents: 'none', zIndex: 0,
+          }}
+        />
+
+        {/* Title bar */}
+        <div
+          style={{
+            display: 'flex', alignItems: 'center', height: 40,
+            padding: '0 14px', gap: 10,
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(255,255,255,0.02)',
+            position: 'relative', zIndex: 2,
           }}
         >
-          nikhil@dev ~ %
-        </span>
-      </div>
-
-      {/* Terminal body */}
-      <div style={{ padding: '20px 24px 24px', position: 'relative', zIndex: 2 }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {LINES.map((line, i) => (
-            <Line key={i} line={line} index={i} />
-          ))}
+          <TrafficLights />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-tertiary)' }}>
+            nikhil@dev ~ %
+          </span>
+          {focused && (
+            <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'rgba(230,169,62,0.5)' }}>
+              interactive — esc to exit
+            </span>
+          )}
         </div>
 
-        {/* CTA buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            delay: 1.3 + LINES.length * 0.12,
-            duration: 0.5,
-            ease: EASE,
-          }}
-          style={{ display: 'flex', gap: 10, marginTop: 20 }}
-        >
-          <CTAButton href={bio.resume} variant="filled">
-            View resume
-          </CTAButton>
-          <CTAButton href={`mailto:${bio.email}`} variant="ghost">
-            Get in touch
-          </CTAButton>
-        </motion.div>
+        {/* Terminal body */}
+        <div style={{ padding: '20px 24px 24px', position: 'relative', zIndex: 2, maxHeight: 340, overflowY: 'auto' }}>
+          {/* Static lines */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {STATIC_LINES.map((line, i) => (
+              <StaticLine key={i} line={line} index={i} />
+            ))}
+          </div>
+
+          {/* Easter egg history */}
+          {eggHistory.length > 0 && (
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {eggHistory.map((entry, i) => (
+                <EggLine key={i} entry={entry} />
+              ))}
+            </div>
+          )}
+
+          {/* Interactive input row */}
+          {focused && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>$ </span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--accent)' }}>{inputBuf}</span>
+              <span className="cursor-blink" aria-hidden />
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+
+          {/* CTA buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3 + STATIC_LINES.length * 0.12, duration: 0.5, ease: EASE }}
+            style={{ display: 'flex', gap: 10, marginTop: 20 }}
+          >
+            <CTAButton href={bio.resume} variant="filled">View resume</CTAButton>
+            <CTAButton href={`mailto:${bio.email}`} variant="ghost">Get in touch</CTAButton>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-// ── Terminal line ─────────────────────────────────────────────────────────────
-function Line({ line, index }: { line: TermLine; index: number }) {
+// ── Static terminal line ───────────────────────────────────────────────────────
+function StaticLine({ line, index }: { line: TermLine; index: number }) {
   const [hovered, setHovered] = useState(false);
-
-  const transition = {
-    delay: 1.3 + index * 0.12,
-    duration: 0.3,
-    ease: EASE,
-  };
-
-  const monoSm: React.CSSProperties = {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.85rem',
-  };
+  const transition = { delay: 1.3 + index * 0.12, duration: 0.3, ease: EASE };
+  const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: '0.85rem' };
 
   if (line.kind === 'blank') {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={transition}
-        style={{ height: 8 }}
-      />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={transition} style={{ height: 8 }} />
     );
   }
 
   let content: React.ReactNode;
-
   if (line.kind === 'cmd') {
     content = (
       <>
-        <span style={{ ...monoSm, color: 'var(--text-tertiary)' }}>$ </span>
-        <span style={{ ...monoSm, color: 'var(--text-secondary)' }}>{line.text}</span>
+        <span style={{ ...mono, color: 'var(--text-tertiary)' }}>$ </span>
+        <span style={{ ...mono, color: 'var(--text-secondary)' }}>{line.text}</span>
       </>
     );
   } else if (line.kind === 'out') {
-    content = (
-      <span style={{ ...monoSm, color: 'var(--text-primary)', paddingLeft: '1.1rem' }}>
-        {line.text}
-      </span>
-    );
+    content = <span style={{ ...mono, color: 'var(--text-primary)', paddingLeft: '1.1rem' }}>{line.text}</span>;
   } else if (line.kind === 'status') {
     content = (
-      <span
-        style={{
-          ...monoSm,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          paddingLeft: '1.1rem',
-          color: 'var(--text-primary)',
-        }}
-      >
-        {/* Pulsing amber dot */}
+      <span style={{ ...mono, display: 'inline-flex', alignItems: 'center', gap: 8, paddingLeft: '1.1rem', color: 'var(--text-primary)' }}>
         <span style={{ position: 'relative', display: 'inline-flex', width: 8, height: 8, flexShrink: 0 }}>
-          <span
-            className="animate-ping"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              background: 'var(--accent)',
-              opacity: 0.6,
-            }}
-          />
-          <span
-            style={{
-              position: 'relative',
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--accent)',
-            }}
-          />
+          <span className="animate-ping" style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--accent)', opacity: 0.6 }} />
+          <span style={{ position: 'relative', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)' }} />
         </span>
         open to work
       </span>
@@ -325,15 +365,7 @@ function Line({ line, index }: { line: TermLine; index: number }) {
         rel="noopener noreferrer"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        style={{
-          ...monoSm,
-          display: 'block',
-          paddingLeft: '1.1rem',
-          color: 'var(--accent)',
-          textDecoration: 'none',
-          opacity: hovered ? 0.7 : 1,
-          transition: 'opacity 0.15s ease',
-        }}
+        style={{ ...mono, display: 'block', paddingLeft: '1.1rem', color: 'var(--accent)', textDecoration: 'none', opacity: hovered ? 0.7 : 1, transition: 'opacity 0.15s ease' }}
       >
         {line.text}
       </a>
@@ -341,15 +373,27 @@ function Line({ line, index }: { line: TermLine; index: number }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={transition}
-      style={{ lineHeight: line.kind === 'cmd' ? 2 : 1.65 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={transition} style={{ lineHeight: line.kind === 'cmd' ? 2 : 1.65 }}>
       {content}
     </motion.div>
   );
+}
+
+// ── Easter egg history line ────────────────────────────────────────────────────
+function EggLine({ entry }: { entry: EggEntry }) {
+  const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: '0.85rem', lineHeight: 1.65 };
+  if (entry.kind === 'input') {
+    return (
+      <div>
+        <span style={{ ...mono, color: 'var(--text-tertiary)' }}>$ </span>
+        <span style={{ ...mono, color: 'var(--accent)' }}>{entry.text}</span>
+      </div>
+    );
+  }
+  if (entry.kind === 'error') {
+    return <div style={{ ...mono, paddingLeft: '1.1rem', color: '#ff5f57' }}>{entry.text}</div>;
+  }
+  return <div style={{ ...mono, paddingLeft: '1.1rem', color: 'var(--text-primary)' }}>{entry.text}</div>;
 }
 
 // ── Traffic lights ─────────────────────────────────────────────────────────────
@@ -357,28 +401,16 @@ function TrafficLights() {
   return (
     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
       {(['#ff5f57', '#ffbd2e', '#28c840'] as const).map((color) => (
-        <div
-          key={color}
-          style={{ width: 12, height: 12, borderRadius: '50%', background: color }}
-        />
+        <div key={color} style={{ width: 12, height: 12, borderRadius: '50%', background: color }} />
       ))}
     </div>
   );
 }
 
 // ── CTA buttons ────────────────────────────────────────────────────────────────
-function CTAButton({
-  href,
-  variant,
-  children,
-}: {
-  href: string;
-  variant: 'filled' | 'ghost';
-  children: React.ReactNode;
-}) {
+function CTAButton({ href, variant, children }: { href: string; variant: 'filled' | 'ghost'; children: React.ReactNode }) {
   const [hovered, setHovered] = useState(false);
-  const [active, setActive]   = useState(false);
-
+  const [active,  setActive]  = useState(false);
   const filled = variant === 'filled';
 
   return (
@@ -405,17 +437,8 @@ function CTAButton({
         transform: active ? 'scale(0.98)' : 'scale(1)',
         transition: 'background 0.15s ease, opacity 0.15s ease, transform 0.1s ease',
         ...(filled
-          ? {
-              background: hovered ? '#d4993a' : 'var(--accent)',
-              color: '#09090b',
-              border: 'none',
-            }
-          : {
-              background: 'transparent',
-              color: 'var(--text-primary)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              opacity: hovered ? 0.7 : 1,
-            }),
+          ? { background: hovered ? '#d4993a' : 'var(--accent)', color: '#09090b', border: 'none' }
+          : { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', opacity: hovered ? 0.7 : 1 }),
       }}
     >
       {children}

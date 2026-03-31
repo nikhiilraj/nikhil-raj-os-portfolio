@@ -1,16 +1,23 @@
 'use client';
 import { useRef, useState } from 'react';
+import {
+  User,
+  Folder,
+  Lightning,
+  File,
+  ChatDots,
+} from '@phosphor-icons/react';
 import { motion, useMotionValue, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { useStore, AppId } from '@/lib/store';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const APPS: { id: AppId; label: string; emoji: string }[] = [
-  { id: 'about',    label: 'About Me',  emoji: '👤' },
-  { id: 'projects', label: 'Projects',  emoji: '🗂️' },
-  { id: 'skills',   label: 'Skills',    emoji: '⚡' },
-  { id: 'resume',   label: 'Resume',    emoji: '📄' },
-  { id: 'contact',  label: 'Messages',  emoji: '💬' },
+const APPS: { id: AppId; label: string; Icon: React.ElementType }[] = [
+  { id: 'about',    label: 'About Me',  Icon: User      },
+  { id: 'projects', label: 'Projects',  Icon: Folder    },
+  { id: 'skills',   label: 'Skills',    Icon: Lightning },
+  { id: 'resume',   label: 'Resume',    Icon: File      },
+  { id: 'contact',  label: 'Messages',  Icon: ChatDots  },
 ];
 
 function DockIcon({
@@ -20,11 +27,11 @@ function DockIcon({
   app: (typeof APPS)[0];
   mouseX: MotionValue<number>;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const ref            = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState(false);
 
   const openWindow = useStore((s) => s.openWindow);
-  const isOpen = useStore(
+  const isOpen     = useStore(
     (s) => s.windows[app.id].isOpen && !s.windows[app.id].isMinimized,
   );
 
@@ -34,8 +41,8 @@ function DockIcon({
     return val - (bounds.left + bounds.width / 2);
   });
 
-  // Base 44px → peak 53px (≈1.2×), neighbor at ~60px ≈1.07×
-  const size = useTransform(distance, [-100, 0, 100], [44, 53, 44]);
+  // 44px base → 53px peak ≈ 1.2×; neighbour at ~60px ≈ 1.07×
+  const size       = useTransform(distance, [-100, 0, 100], [44, 53, 44]);
   const sizeSpring = useSpring(size, { stiffness: 320, damping: 26 });
 
   return (
@@ -44,14 +51,15 @@ function DockIcon({
       className="relative flex flex-col items-center no-select"
       style={{ cursor: 'default' }}
       onClick={() => openWindow(app.id)}
-      onMouseEnter={() => setTooltipVisible(true)}
-      onMouseLeave={() => setTooltipVisible(false)}
+      onMouseEnter={() => setTooltip(true)}
+      onMouseLeave={() => setTooltip(false)}
     >
       {/* Tooltip */}
-      <motion.span
+      <motion.div
         initial={false}
-        animate={tooltipVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
-        transition={{ duration: 0.15, ease: 'easeOut' }}
+        animate={tooltip ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
+        transition={{ duration: 0.15, delay: tooltip ? 0.2 : 0, ease: 'easeOut' }}
+        role="tooltip"
         style={{
           position: 'absolute',
           bottom: '100%',
@@ -68,7 +76,7 @@ function DockIcon({
         }}
       >
         {app.label}
-      </motion.span>
+      </motion.div>
 
       {/* Icon */}
       <motion.div
@@ -77,6 +85,10 @@ function DockIcon({
         whileHover={{ y: -5 }}
         transition={{ type: 'spring', stiffness: 320, damping: 26 }}
         className="relative rounded-[14px] flex items-center justify-center"
+        aria-label={app.label}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openWindow(app.id); }}
       >
         <div
           className="absolute inset-0 rounded-[14px]"
@@ -87,10 +99,14 @@ function DockIcon({
             WebkitBackdropFilter: 'blur(8px)',
           }}
         />
-        <span className="relative text-2xl select-none">{app.emoji}</span>
+        <app.Icon
+          weight="bold"
+          size={22}
+          style={{ position: 'relative', color: 'var(--text-secondary)' }}
+        />
       </motion.div>
 
-      {/* Active indicator — amber dot */}
+      {/* Active dot — amber */}
       <div
         style={{
           width: 4,
@@ -112,6 +128,8 @@ export default function Dock() {
   return (
     <motion.div
       className="fixed bottom-3 left-1/2 -translate-x-1/2 flex items-end gap-2 px-4 py-2 no-select"
+      role="navigation"
+      aria-label="Application dock"
       style={{
         zIndex: 9000,
         borderRadius: 16,
