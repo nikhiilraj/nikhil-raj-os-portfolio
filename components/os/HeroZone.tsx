@@ -1,8 +1,14 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { bio } from '@/lib/data';
 import { useStore } from '@/lib/store';
+
+const SplineRobot = dynamic(() => import('@/components/ui/SplineRobot'), {
+  ssr: false,
+  loading: () => null,
+});
 
 // ── Easing ─────────────────────────────────────────────────────────────────────
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -83,7 +89,31 @@ function HeroContent() {
         v4.2 · Full Stack &amp; AI Engineer
       </motion.p>
 
-      <TerminalCard />
+      {/* Terminal + 3D Robot composition */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          maxWidth: 'calc(100vw - 32px)',
+        }}
+      >
+        <TerminalCard />
+
+        {/* Robot — overlaps the terminal card edge for depth */}
+        <div
+          style={{
+            marginLeft: -48,
+            marginTop: -60,
+            position: 'relative',
+            zIndex: 5,
+            pointerEvents: 'auto',
+          }}
+        >
+          <SplineRobot />
+        </div>
+      </div>
     </div>
   );
 }
@@ -211,7 +241,7 @@ function TerminalCard() {
       ref={wrapperRef}
       className="terminal-spotlight"
       onMouseMove={handleMouseMove}
-      style={{ pointerEvents: 'auto', maxWidth: 'calc(100vw - 32px)', width: 560 }}
+      style={{ pointerEvents: 'auto', maxWidth: 'calc(100vw - 32px)', width: 560, position: 'relative', zIndex: 2 }}
     >
       {/* Spotlight ring — shown only on hover */}
       <div className="spotlight-ring" aria-hidden />
