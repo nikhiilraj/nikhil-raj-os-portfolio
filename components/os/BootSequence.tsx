@@ -61,7 +61,7 @@ export default function BootSequence({ onDone }: Props) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
           className="fixed inset-0 flex flex-col items-center justify-center"
-          style={{ background: '#040510', zIndex: 99999, fontFamily: 'var(--font-mono)' }}
+          style={{ background: '#09090b', zIndex: 99999, fontFamily: 'var(--font-mono)' }}
         >
           {showAscii && (
             <motion.pre

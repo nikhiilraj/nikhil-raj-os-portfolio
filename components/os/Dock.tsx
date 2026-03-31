@@ -1,20 +1,32 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { useStore, AppId } from '@/lib/store';
 
-const APPS: { id: AppId; label: string; emoji: string; color: string }[] = [
-  { id: 'about',    label: 'About Me',  emoji: '👤', color: '#7c6aff' },
-  { id: 'projects', label: 'Projects',  emoji: '🗂️', color: '#3dd6f5' },
-  { id: 'skills',   label: 'Skills',    emoji: '⚡', color: '#f472b6' },
-  { id: 'resume',   label: 'Resume',    emoji: '📄', color: '#a78bfa' },
-  { id: 'contact',  label: 'Messages',  emoji: '💬', color: '#34d399' },
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+const APPS: { id: AppId; label: string; emoji: string }[] = [
+  { id: 'about',    label: 'About Me',  emoji: '👤' },
+  { id: 'projects', label: 'Projects',  emoji: '🗂️' },
+  { id: 'skills',   label: 'Skills',    emoji: '⚡' },
+  { id: 'resume',   label: 'Resume',    emoji: '📄' },
+  { id: 'contact',  label: 'Messages',  emoji: '💬' },
 ];
 
-function DockIcon({ app, mouseX }: { app: typeof APPS[0]; mouseX: MotionValue<number> }) {
+function DockIcon({
+  app,
+  mouseX,
+}: {
+  app: (typeof APPS)[0];
+  mouseX: MotionValue<number>;
+}) {
   const ref = useRef<HTMLDivElement>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+
   const openWindow = useStore((s) => s.openWindow);
-  const isOpen = useStore((s) => s.windows[app.id].isOpen && !s.windows[app.id].isMinimized);
+  const isOpen = useStore(
+    (s) => s.windows[app.id].isOpen && !s.windows[app.id].isMinimized,
+  );
 
   const distance = useTransform(mouseX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect();
@@ -22,50 +34,73 @@ function DockIcon({ app, mouseX }: { app: typeof APPS[0]; mouseX: MotionValue<nu
     return val - (bounds.left + bounds.width / 2);
   });
 
-  const size = useTransform(distance, [-100, 0, 100], [44, 62, 44]);
-  const sizeSpring = useSpring(size, { stiffness: 300, damping: 25 });
+  // Base 44px → peak 53px (≈1.2×), neighbor at ~60px ≈1.07×
+  const size = useTransform(distance, [-100, 0, 100], [44, 53, 44]);
+  const sizeSpring = useSpring(size, { stiffness: 320, damping: 26 });
 
   return (
     <motion.div
       ref={ref}
-      className="relative flex flex-col items-center gap-1 cursor-pointer group"
+      className="relative flex flex-col items-center no-select"
+      style={{ cursor: 'default' }}
       onClick={() => openWindow(app.id)}
+      onMouseEnter={() => setTooltipVisible(true)}
+      onMouseLeave={() => setTooltipVisible(false)}
     >
+      {/* Tooltip */}
+      <motion.span
+        initial={false}
+        animate={tooltipVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
+        style={{
+          position: 'absolute',
+          bottom: '100%',
+          marginBottom: 8,
+          whiteSpace: 'nowrap',
+          fontSize: 11,
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--text-primary)',
+          background: 'rgba(17,17,20,0.95)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 6,
+          padding: '3px 8px',
+          pointerEvents: 'none',
+        }}
+      >
+        {app.label}
+      </motion.span>
+
+      {/* Icon */}
       <motion.div
         style={{ width: sizeSpring, height: sizeSpring }}
-        className="relative rounded-[14px] flex items-center justify-center text-2xl transition-all duration-75"
-        whileTap={{ scale: 0.9 }}
-        whileHover={{ y: -4 }}
+        whileTap={{ scale: 0.88 }}
+        whileHover={{ y: -5 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+        className="relative rounded-[14px] flex items-center justify-center"
       >
-        {/* Glass icon bg */}
         <div
-          className="absolute inset-0 rounded-[14px] transition-all"
+          className="absolute inset-0 rounded-[14px]"
           style={{
-            background: `linear-gradient(135deg, ${app.color}20, ${app.color}08)`,
-            border: `1px solid ${app.color}30`,
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.09)',
             backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
           }}
         />
         <span className="relative text-2xl select-none">{app.emoji}</span>
       </motion.div>
 
-      {/* Label tooltip */}
-      <span
-        className="absolute -top-8 text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap"
-        style={{
-          background: 'rgba(10,25,47,0.95)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-mono)',
-        }}
-      >
-        {app.label}
-      </span>
-
-      {/* Open indicator dot */}
+      {/* Active indicator — amber dot */}
       <div
-        className="w-1 h-1 rounded-full transition-all duration-200"
-        style={{ background: isOpen ? app.color : 'transparent' }}
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: '50%',
+          marginTop: 3,
+          background: isOpen ? 'var(--accent)' : 'transparent',
+          transition: 'background 0.2s ease',
+          flexShrink: 0,
+        }}
       />
     </motion.div>
   );
@@ -75,22 +110,26 @@ export default function Dock() {
   const mouseX = useMotionValue<number>(Infinity);
 
   return (
-    <div
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 flex items-end gap-2 px-4 py-2 rounded-2xl no-select"
+    <motion.div
+      className="fixed bottom-3 left-1/2 -translate-x-1/2 flex items-end gap-2 px-4 py-2 no-select"
       style={{
         zIndex: 9000,
-        background: 'linear-gradient(135deg, rgba(124,106,255,0.08), rgba(6,7,20,0.82))',
-        backdropFilter: 'blur(36px)',
-        WebkitBackdropFilter: 'blur(36px)',
-        border: '1px solid rgba(124,106,255,0.15)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+        borderRadius: 16,
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 2.0, duration: 0.7, ease: EASE }}
       onMouseMove={(e) => mouseX.set(e.clientX)}
       onMouseLeave={() => mouseX.set(Infinity)}
     >
       {APPS.map((app) => (
         <DockIcon key={app.id} app={app} mouseX={mouseX} />
       ))}
-    </div>
+    </motion.div>
   );
 }

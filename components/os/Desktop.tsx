@@ -1,36 +1,44 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useStore } from '@/lib/store';
 import Menubar from './Menubar';
 import Dock from './Dock';
+import HeroZone from './HeroZone';
 import AboutApp from '@/components/apps/AboutApp';
 import ProjectsApp from '@/components/apps/ProjectsApp';
 import SkillsApp from '@/components/apps/SkillsApp';
 import ResumeApp from '@/components/apps/ResumeApp';
 import ContactApp from '@/components/apps/ContactApp';
 
-// Three.js dynamically to avoid SSR issues
 const ParticleField = dynamic(() => import('@/components/background/ParticleField'), { ssr: false });
 
 export default function Desktop() {
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ background: 'var(--bg)' }}>
-      {/* Particle background */}
+      {/* Ambient background */}
       <ParticleField />
 
-      {/* Radial gradient overlay for depth */}
+      {/* Cursor glow */}
+      <CursorGlow />
+
+      {/* Grain texture overlay */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        aria-hidden
         style={{
-          background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(99,70,255,0.05) 0%, transparent 80%)',
-          zIndex: 1,
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 9999,
+          opacity: 0.035,
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
         }}
       />
 
       {/* OS Chrome */}
       <Menubar />
 
-      {/* App Windows — z-index managed by store */}
+      {/* App Windows */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 100, pointerEvents: 'none' }}>
         <div style={{ pointerEvents: 'auto' }}>
           <AboutApp />
@@ -41,52 +49,62 @@ export default function Desktop() {
         </div>
       </div>
 
-      {/* Desktop idle hint */}
-      <DesktopHint />
+      {/* Hero */}
+      <HeroZone />
 
       <Dock />
     </div>
   );
 }
 
-function DesktopHint() {
-  const anyOpen = useStore((s) =>
-    Object.values(s.windows).some((w) => w.isOpen && !w.isMinimized)
-  );
+// ── Cursor glow — lerp-smoothed radial amber trail ────────────────────────────
 
-  if (anyOpen) return null;
+function CursorGlow() {
+  const divRef  = useRef<HTMLDivElement>(null);
+  const posRef  = useRef({ x: -9999, y: -9999 });
+  const lerpRef = useRef({ x: -9999, y: -9999 });
+  const frameRef = useRef(0);
+
+  useEffect(() => {
+    const onPointerMove = (e: PointerEvent) => {
+      posRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('pointermove', onPointerMove);
+
+    const loop = () => {
+      const l = lerpRef.current;
+      const p = posRef.current;
+      l.x += (p.x - l.x) * 0.08;
+      l.y += (p.y - l.y) * 0.08;
+      if (divRef.current) {
+        divRef.current.style.transform = `translate(${l.x - 150}px, ${l.y - 150}px)`;
+      }
+      frameRef.current = requestAnimationFrame(loop);
+    };
+    frameRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none"
-      style={{ zIndex: 50 }}
-    >
-      <div className="text-center space-y-3 px-6">
-        <p
-          className="text-4xl md:text-6xl font-bold tracking-tight"
-          style={{
-            letterSpacing: '-0.02em',
-            backgroundImage: 'linear-gradient(135deg, #e2e8f0 0%, #7c6aff 45%, #3dd6f5 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          Nikhil Raj
-        </p>
-        <p
-          className="text-sm md:text-base"
-          style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
-        >
-          Full Stack Engineer · Backend & AI Applications
-        </p>
-        <p
-          className="text-xs mt-4 animate-pulse"
-          style={{ color: 'rgba(124,106,255,0.55)', fontFamily: 'var(--font-mono)' }}
-        >
-          click an icon below to explore ↓
-        </p>
-      </div>
-    </div>
+      ref={divRef}
+      aria-hidden
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: 300,
+        height: 300,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(230,169,62,0.035) 0%, transparent 70%)',
+        pointerEvents: 'none',
+        zIndex: 9998,
+        willChange: 'transform',
+      }}
+    />
   );
 }
