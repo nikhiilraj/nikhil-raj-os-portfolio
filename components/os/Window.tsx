@@ -43,13 +43,13 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
         onMouseDown={() => bringToFront(id)}
         style={{
           position: 'fixed',
-          left: win.position.x,
-          top: win.position.y,
-          width: win.size.width,
-          height: win.size.height,
+          left: `clamp(8px, ${win.position.x}px, calc(100vw - 8px - min(${win.size.width}px, calc(100vw - 16px))))`,
+          top: `clamp(48px, ${win.position.y}px, calc(100vh - 8px - min(${win.size.height}px, calc(100vh - 80px))))`,
+          width: `min(${win.size.width}px, calc(100vw - 16px))`,
+          height: `min(${win.size.height}px, calc(100vh - 80px))`,
           zIndex: win.zIndex,
-          minWidth,
-          minHeight,
+          minWidth: `min(${minWidth}px, calc(100vw - 16px))`,
+          minHeight: `min(${minHeight}px, calc(100vh - 80px))`,
         }}
         className="rounded-[12px] overflow-hidden flex flex-col no-select"
         whileDrag={{ scale: 1.01 }}

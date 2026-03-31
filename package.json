@@ -16,6 +16,7 @@
     "@splinetool/runtime": "^1.12.73",
     "@types/d3": "^7.4.3",
     "@types/three": "^0.183.1",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
     "framer-motion": "^12.38.0",

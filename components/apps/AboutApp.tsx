@@ -32,7 +32,7 @@ function SocialLink({ href, children }: { href: string; children: React.ReactNod
 export default function AboutApp() {
   return (
     <Window id="about" title="about.nikhil" icon={<User weight="bold" size={14} />}>
-      <div className="h-full overflow-y-auto" style={{ padding: '24px 28px 32px' }}>
+      <div className="h-full overflow-y-auto px-4 py-6 sm:px-7 sm:py-6 sm:pb-8">
         {/* Header: avatar + name + status */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -163,9 +163,8 @@ export default function AboutApp() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.45, ease: EASE }}
+          className="grid grid-cols-1 sm:grid-cols-2"
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
             gap: '8px 16px',
             marginBottom: 28,
             padding: '14px 16px',

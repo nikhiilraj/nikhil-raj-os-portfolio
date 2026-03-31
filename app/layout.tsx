@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+import { Analytics } from '@vercel/analytics/next';
 
 const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains',
@@ -57,7 +58,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${jetbrainsMono.variable} ${instrumentSerif.variable} ${plusJakartaSans.variable} h-full`}
     >
-      <body className="h-full overflow-hidden">{children}</body>
+      <body className="h-full overflow-hidden">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
