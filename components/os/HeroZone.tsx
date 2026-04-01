@@ -24,10 +24,6 @@ const STATIC_LINES: TermLine[] = [
   { kind: 'cmd',    text: 'whoami' },
   { kind: 'out',    text: 'Nikhil Raj — full stack developer' },
   { kind: 'blank' },
-  { kind: 'cmd',    text: 'stack --list' },
-  { kind: 'out',    text: 'React · Next.js · TypeScript' },
-  { kind: 'out',    text: 'Tailwind · Framer Motion · Three.js' },
-  { kind: 'blank' },
   { kind: 'cmd',    text: 'uptime' },
   { kind: 'out',    text: '4 yrs · 30+ projects shipped' },
   { kind: 'blank' },
@@ -46,12 +42,9 @@ type EggEntry =
   | { kind: 'error';  text: string };
 
 const COMMANDS: Record<string, (email: string) => EggEntry[]> = {
-  help:   () => [{ kind: 'output', text: 'available commands: whoami, hire, stack, clear' }],
+  help:   () => [{ kind: 'output', text: 'available commands: whoami, hire, clear' }],
   whoami: () => [{ kind: 'output', text: 'Nikhil Raj — full stack developer' }],
-  stack:  () => [
-    { kind: 'output', text: 'React · Next.js · TypeScript' },
-    { kind: 'output', text: 'Tailwind · Framer Motion · Three.js' },
-  ],
+
   hire: (email) => [{ kind: 'output', text: `opening email client for ${email}…` }],
 };
 
