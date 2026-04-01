@@ -1,6 +1,8 @@
 'use client';
 import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { ParticleCard, GlobalSpotlight, useMobileDetection } from '@/components/reactbits/MagicBento';
+import CircuitDivider from '@/components/ui/CircuitDivider';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -29,25 +31,65 @@ const PROJECTS = [
 ];
 
 export default function SelectedWork() {
-  const ref    = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
+  const gridRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMobileDetection();
 
   const { scrollYProgress: bgScroll } = useScroll({
     target: ref,
-    offset: ["start end", "end start"],
+    offset: ['start end', 'end start'],
   });
   const bgY = useTransform(bgScroll, [0, 1], [60, -60]);
 
   return (
     <section
       ref={ref}
+      className="bento-section"
       style={{
         position: 'relative',
         maxWidth: 960,
         margin: '0 auto',
-        padding: '80px 24px 64px',
+        padding: '0 24px 64px',
+        overflow: 'hidden',
       }}
     >
+      {/* ── Circuit trace divider ─────────────────────────────── */}
+      <CircuitDivider />
+
+      {/* ── Code rain background ──────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          overflow: 'hidden',
+          pointerEvents: 'none',
+          zIndex: 0,
+          opacity: 0.018,
+        }}
+      >
+        {Array.from({ length: 8 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              top: '-100%',
+              left: `${12 + i * 12}%`,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              lineHeight: 1.6,
+              color: 'var(--accent)',
+              writingMode: 'vertical-rl',
+              whiteSpace: 'nowrap',
+              animation: `code-rain ${18 + i * 4}s linear infinite ${-i * 3}s`,
+            }}
+          >
+            {'{}=>const let fn()return async await import export 0x1F useEffect useState ref map filter reduce'}
+          </div>
+        ))}
+      </div>
+
       {/* Background architectural text */}
       <div
         aria-hidden
@@ -85,14 +127,12 @@ export default function SelectedWork() {
         initial={{ opacity: 0, y: 12 }}
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6, ease: EASE }}
-        style={{ marginBottom: 32 }}
+        style={{ marginBottom: 32, position: 'relative', zIndex: 1 }}
       >
-        <span className="section-label" style={{ position: 'relative', zIndex: 1 }}>Selected Work</span>
+        <span className="section-label" style={{ position: 'relative', zIndex: 1 }}>
+          Selected Work
+        </span>
       </motion.div>
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <LineWipe inView={inView} />
-      </div>
 
       {/* Heading */}
       <motion.h2
@@ -115,8 +155,18 @@ export default function SelectedWork() {
         Things I&apos;ve built
       </motion.h2>
 
-      {/* Asymmetric bento grid */}
+      {/* ── GlobalSpotlight ───────────────────────────────────── */}
+      <GlobalSpotlight
+        gridRef={gridRef}
+        disableAnimations={isMobile}
+        enabled={true}
+        spotlightRadius={400}
+        glowColor="230, 169, 62"
+      />
+
+      {/* ── Asymmetric bento grid ─────────────────────────────── */}
       <div
+        ref={gridRef}
         style={{
           position: 'relative',
           zIndex: 1,
@@ -127,33 +177,34 @@ export default function SelectedWork() {
         }}
       >
         {PROJECTS.map((project, i) => (
-          <ProjectCard key={project.num} project={project} index={i} inView={inView} />
+          <ProjectCard key={project.num} project={project} index={i} inView={inView} isMobile={isMobile} />
         ))}
       </div>
     </section>
   );
 }
 
-type Project = typeof PROJECTS[0];
+type Project = (typeof PROJECTS)[0];
 
 function ProjectCard({
   project,
   index,
   inView,
+  isMobile,
 }: {
   project: Project;
   index: number;
   inView: boolean;
+  isMobile: boolean;
 }) {
-  const cardRef  = useRef<HTMLDivElement>(null);
-  
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const { scrollYProgress } = useScroll({
     target: cardRef,
-    offset: ["start end", "end start"],
+    offset: ['start end', 'end start'],
   });
-  
-  // Featured card moves slightly slower, others slightly faster
-  const speed = project.featured ? 15 : -10 + (index * 8);
+
+  const speed = project.featured ? 15 : -10 + index * 8;
   const y = useTransform(scrollYProgress, [0, 1], [speed, -speed]);
 
   const gridStyle: React.CSSProperties = project.featured
@@ -168,13 +219,26 @@ function ProjectCard({
       transition={{ delay: 0.15 + index * 0.08, duration: 0.55, ease: EASE }}
       style={{ ...gridStyle, y }}
     >
-      <CardInner project={project} featured={project.featured} />
+      <ParticleCard
+        className="bento-card"
+        disableAnimations={isMobile}
+        particleCount={8}
+        glowColor="230, 169, 62"
+        enableTilt={true}
+        maxTilt={8}
+        enableMagnetism={true}
+        magnetStrength={0.03}
+        clickEffect={true}
+        style={{ height: '100%' }}
+      >
+        <CardInner project={project} featured={project.featured} />
+      </ParticleCard>
     </motion.div>
   );
 }
 
 function CardInner({ project, featured }: { project: Project; featured: boolean }) {
-  const ref     = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -198,28 +262,22 @@ function CardInner({ project, featured }: { project: Project; featured: boolean 
         flexDirection: 'column',
         gap: 12,
         cursor: 'default',
-        transition: 'border-color 0.2s ease, transform 0.2s ease',
+        transition: 'border-color 0.2s ease',
         position: 'relative',
         overflow: 'hidden',
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
       }}
     >
       {/* Spotlight ring */}
       <div className="spotlight-ring" aria-hidden />
 
-      {/* Top shimmer on hover */}
+      {/* Top shimmer */}
       <div
         aria-hidden
         style={{
           position: 'absolute',
-          top: 0, left: 0, right: 0,
+          top: 0,
+          left: 0,
+          right: 0,
           height: 1,
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
           pointerEvents: 'none',
@@ -289,22 +347,5 @@ function CardInner({ project, featured }: { project: Project; featured: boolean 
         ))}
       </div>
     </div>
-  );
-}
-
-function LineWipe({ inView }: { inView: boolean }) {
-  return (
-    <motion.div
-      initial={{ scaleX: 0 }}
-      animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      style={{
-        height: 1,
-        background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
-        transformOrigin: 'left',
-        marginBottom: 48,
-        opacity: 0.4,
-      }}
-    />
   );
 }

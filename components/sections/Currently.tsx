@@ -1,17 +1,18 @@
 'use client';
 import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import CircuitDivider from '@/components/ui/CircuitDivider';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const ROWS = [
   { label: 'Building', value: 'A design system for indie devs' },
   { label: 'Learning', value: 'Rust and WebAssembly' },
-  { label: 'Reading',  value: 'Designing Data-Intensive Applications' },
+  { label: 'Reading', value: 'Designing Data-Intensive Applications' },
 ];
 
 export default function Currently() {
-  const ref    = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
 
   return (
@@ -23,7 +24,8 @@ export default function Currently() {
         padding: '0 24px 80px',
       }}
     >
-      <LineWipe inView={inView} />
+      {/* ── Circuit trace divider ─────────────────────────────── */}
+      <CircuitDivider />
 
       {/* Label */}
       <motion.div
@@ -57,9 +59,8 @@ function CurrentRow({
   const rowRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: rowRef,
-    offset: ["start end", "end start"],
+    offset: ['start end', 'end start'],
   });
-  // Peak opacity at center of viewport scroll position
   const opacity = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [0.3, 0.8, 1, 0.8, 0.3]);
 
   return (
@@ -100,22 +101,5 @@ function CurrentRow({
         {row.value}
       </span>
     </motion.div>
-  );
-}
-
-function LineWipe({ inView }: { inView: boolean }) {
-  return (
-    <motion.div
-      initial={{ scaleX: 0 }}
-      animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      style={{
-        height: 1,
-        background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
-        transformOrigin: 'left',
-        marginBottom: 48,
-        opacity: 0.4,
-      }}
-    />
   );
 }

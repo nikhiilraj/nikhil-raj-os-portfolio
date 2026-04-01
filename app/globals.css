@@ -51,6 +51,7 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+
 /* ── Scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -188,4 +189,62 @@ a[href*="spline.design"] {
   height: 0 !important;
   overflow: hidden !important;
   position: absolute !important;
+}
+
+/* ── Code rain background texture ────────────────────────── */
+@keyframes code-rain {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.code-rain-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.018;
+}
+
+.code-rain-col {
+  position: absolute;
+  top: -100%;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--accent);
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  animation: code-rain var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+/* ── Bento card glow (MagicBento integration) ────────────── */
+.bento-card {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 200px;
+}
+
+.bento-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 6px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(230, 169, 62, calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(230, 169, 62, calc(var(--glow-intensity) * 0.4)) 30%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }

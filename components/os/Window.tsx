@@ -27,10 +27,23 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
     <AnimatePresence>
       <motion.div
         key={id}
-        initial={{ opacity: 0, y: 12, scale: 0.97 }}
+        initial={{ opacity: 0, y: 60, scale: 0.85 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 12, scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        exit={{ opacity: 0, y: 60, scale: 0.85 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+        style={{
+          ...{
+            position: 'fixed',
+            left: `clamp(8px, ${win.position.x}px, calc(100vw - 8px - min(${win.size.width}px, calc(100vw - 16px))))`,
+            top: `clamp(48px, ${win.position.y}px, calc(100vh - 8px - min(${win.size.height}px, calc(100vh - 80px))))`,
+            width: `min(${win.size.width}px, calc(100vw - 16px))`,
+            height: `min(${win.size.height}px, calc(100vh - 80px))`,
+            zIndex: win.zIndex,
+            minWidth: `min(${minWidth}px, calc(100vw - 16px))`,
+            minHeight: `min(${minHeight}px, calc(100vh - 80px))`,
+            transformOrigin: 'bottom center',
+          },
+        }}
         drag
         dragMomentum={false}
         dragElastic={0}
@@ -41,16 +54,7 @@ export default function Window({ id, title, icon, children, minWidth = 360, minH
           });
         }}
         onMouseDown={() => bringToFront(id)}
-        style={{
-          position: 'fixed',
-          left: `clamp(8px, ${win.position.x}px, calc(100vw - 8px - min(${win.size.width}px, calc(100vw - 16px))))`,
-          top: `clamp(48px, ${win.position.y}px, calc(100vh - 8px - min(${win.size.height}px, calc(100vh - 80px))))`,
-          width: `min(${win.size.width}px, calc(100vw - 16px))`,
-          height: `min(${win.size.height}px, calc(100vh - 80px))`,
-          zIndex: win.zIndex,
-          minWidth: `min(${minWidth}px, calc(100vw - 16px))`,
-          minHeight: `min(${minHeight}px, calc(100vh - 80px))`,
-        }}
+
         className="rounded-[12px] overflow-hidden flex flex-col no-select"
         whileDrag={{ scale: 1.01 }}
       >

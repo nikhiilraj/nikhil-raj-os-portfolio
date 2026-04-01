@@ -114,6 +114,7 @@ function HeroContent() {
           justifyContent: 'center',
           position: 'relative',
           maxWidth: 'calc(100vw - 32px)',
+          pointerEvents: 'auto',
         }}
       >
         <TerminalCard />
