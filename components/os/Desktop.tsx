@@ -92,9 +92,10 @@ function ScrollCanvas() {
         zIndex: 50,
         scrollbarWidth: 'thin',
         scrollbarColor: 'rgba(230,169,62,0.18) transparent',
-        opacity: anyOpen ? 0 : 1,
+        opacity: anyOpen ? 0.35 : 1,
         pointerEvents: anyOpen ? 'none' : 'auto',
-        transition: 'opacity 0.2s ease',
+        transition: 'opacity 0.25s ease',
+        filter: anyOpen ? 'blur(2px)' : 'none',
       }}
     >
       {/* Hero — min-height fills the visible canvas */}
@@ -119,7 +120,7 @@ function ScrollCanvas() {
 }
 
 // ── Context-aware cursor ───────────────────────────────────────────────────────
-type CursorMode = 'default' | 'link' | 'view' | 'text' | 'button';
+type CursorMode = 'default' | 'link' | 'text' | 'button';
 
 function CursorGlow() {
   const divRef = useRef<HTMLDivElement>(null);
@@ -146,7 +147,6 @@ function CursorGlow() {
       const closest = (sel: string) => target.closest(sel);
 
       if (closest('a[href], [role="link"]')) setMode('link');
-      else if (closest('.terminal-spotlight') && !closest('.cursor-blink')) setMode('view');
       else if (closest('[role="region"][aria-label*="Terminal"]')) setMode('text');
       else if (closest('button, [role="button"], .cta-primary, .cta-secondary')) setMode('button');
       else setMode('default');
@@ -216,29 +216,6 @@ function CursorGlow() {
           }}
         >
           ↗
-        </div>
-      )}
-
-      {mode === 'view' && (
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            border: '1.5px solid var(--accent)',
-            background: 'rgba(230,169,62,0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 9,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'var(--accent)',
-            transform: 'translate(-22px, -22px)',
-          }}
-        >
-          view
         </div>
       )}
 

@@ -160,7 +160,7 @@ export default function SelectedWork() {
         gridRef={gridRef}
         disableAnimations={isMobile}
         enabled={true}
-        spotlightRadius={400}
+        spotlightRadius={200}
         glowColor="230, 169, 62"
       />
 

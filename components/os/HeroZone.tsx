@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { bio } from '@/lib/data';
-import { useStore } from '@/lib/store';
 
 const SplineRobot = dynamic(() => import('@/components/ui/SplineRobot'), {
   ssr: false,
@@ -56,12 +55,8 @@ const COMMANDS: Record<string, (email: string) => EggEntry[]> = {
   hire: (email) => [{ kind: 'output', text: `opening email client for ${email}…` }],
 };
 
-// ── Root — hides when any window is open ──────────────────────────────────────
+// ── Root — stays mounted so ScrollCanvas can dim it as overlay backdrop ───────
 export default function HeroZone() {
-  const anyOpen = useStore((s) =>
-    Object.values(s.windows).some((w) => w.isOpen && !w.isMinimized),
-  );
-  if (anyOpen) return null;
   return <HeroContent />;
 }
 
@@ -346,6 +341,60 @@ function TerminalCard() {
             </div>
           )}
 
+          {/* "Click to type" hint — visible only when idle */}
+          {!focused && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.3 + STATIC_LINES.length * 0.12 + 0.3, duration: 0.5 }}
+              style={{
+                marginTop: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 10px',
+                borderRadius: 6,
+                background: 'rgba(230,169,62,0.04)',
+                border: '1px dashed rgba(230,169,62,0.18)',
+              }}
+            >
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--accent)', opacity: 0.5 }}>
+                ▸
+              </span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
+                click to interact
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.65rem',
+                  color: 'var(--text-tertiary)',
+                  opacity: 0.55,
+                  marginLeft: 4,
+                }}
+              >
+                try:
+              </span>
+              {['help', 'hire', 'whoami', 'clear'].map((cmd) => (
+                <span
+                  key={cmd}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    color: 'var(--accent)',
+                    opacity: 0.6,
+                    background: 'rgba(230,169,62,0.08)',
+                    border: '1px solid rgba(230,169,62,0.15)',
+                    borderRadius: 3,
+                    padding: '1px 5px',
+                  }}
+                >
+                  {cmd}
+                </span>
+              ))}
+            </motion.div>
+          )}
+
           {/* Interactive input row */}
           {focused && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
@@ -365,7 +414,15 @@ function TerminalCard() {
             style={{ display: 'flex', gap: 10, marginTop: 20 }}
           >
             <CTAButton href={bio.resume} variant="filled">View resume</CTAButton>
-            <CTAButton href={`mailto:${bio.email}`} variant="ghost">Get in touch</CTAButton>
+            <CTAButton href={`mailto:${bio.email}`} variant="ghost">
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+                Get in touch
+              </span>
+            </CTAButton>
           </motion.div>
         </div>
       </div>
@@ -484,8 +541,8 @@ function CTAButton({ href, variant, children }: { href: string; variant: 'filled
     <motion.a
       ref={buttonRef}
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={href.startsWith('mailto:') ? '_self' : '_blank'}
+      rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
       onMouseEnter={() => setHovered(true)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
