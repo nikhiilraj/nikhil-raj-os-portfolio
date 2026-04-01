@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -23,14 +23,7 @@ export default function Currently() {
         padding: '0 24px 80px',
       }}
     >
-      {/* Divider */}
-      <div
-        style={{
-          height: 1,
-          background: 'rgba(255,255,255,0.06)',
-          marginBottom: 56,
-        }}
-      />
+      <LineWipe inView={inView} />
 
       {/* Label */}
       <motion.div
@@ -61,8 +54,17 @@ function CurrentRow({
   index: number;
   inView: boolean;
 }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: rowRef,
+    offset: ["start end", "end start"],
+  });
+  // Peak opacity at center of viewport scroll position
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.5, 0.7, 1], [0.3, 0.8, 1, 0.8, 0.3]);
+
   return (
     <motion.div
+      ref={rowRef}
       initial={{ opacity: 0, y: 10 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: 0.1 + index * 0.1, duration: 0.5, ease: EASE }}
@@ -73,6 +75,7 @@ function CurrentRow({
         gap: 24,
         padding: '16px 0',
         borderBottom: '1px solid rgba(255,255,255,0.04)',
+        opacity,
       }}
     >
       <span
@@ -97,5 +100,22 @@ function CurrentRow({
         {row.value}
       </span>
     </motion.div>
+  );
+}
+
+function LineWipe({ inView }: { inView: boolean }) {
+  return (
+    <motion.div
+      initial={{ scaleX: 0 }}
+      animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        height: 1,
+        background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
+        transformOrigin: 'left',
+        marginBottom: 48,
+        opacity: 0.4,
+      }}
+    />
   );
 }

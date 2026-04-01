@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { bio } from '@/lib/data';
 import { useStore } from '@/lib/store';
@@ -67,15 +67,31 @@ export default function HeroZone() {
 
 // ── Main layout (non-fixed — lives inside Desktop's scroll canvas) ─────────────
 function HeroContent() {
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setScrollContainer(document.getElementById('main-content'));
+  }, []);
+
+  const { scrollYProgress } = useScroll({ container: scrollContainer ? { current: scrollContainer } : undefined });
+
+  const nameY = useTransform(scrollYProgress, [0, 0.3], [0, -120]);
+  const subtitleY = useTransform(scrollYProgress, [0, 0.3], [0, -80]);
+  const terminalY = useTransform(scrollYProgress, [0, 0.3], [0, -40]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
+
   return (
-    <div className="flex flex-col items-center justify-center pointer-events-none w-full">
-      <NameDisplay />
+    <motion.div style={{ opacity: heroOpacity }} className="flex flex-col items-center justify-center pointer-events-none w-full">
+      <motion.div style={{ y: nameY }}>
+        <NameDisplay />
+      </motion.div>
 
       <motion.p
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.6, ease: EASE }}
         style={{
+          y: subtitleY,
           fontFamily: 'var(--font-mono)',
           fontSize: '0.7rem',
           letterSpacing: '0.12em',
@@ -90,8 +106,9 @@ function HeroContent() {
       </motion.p>
 
       {/* Terminal + 3D Robot composition */}
-      <div
+      <motion.div
         style={{
+          y: terminalY,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -113,8 +130,8 @@ function HeroContent() {
         >
           <SplineRobot />
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -439,19 +456,46 @@ function TrafficLights() {
 
 // ── CTA buttons ────────────────────────────────────────────────────────────────
 function CTAButton({ href, variant, children }: { href: string; variant: 'filled' | 'ghost'; children: React.ReactNode }) {
+  const buttonRef = useRef<HTMLAnchorElement>(null);
   const [hovered, setHovered] = useState(false);
-  const [active,  setActive]  = useState(false);
+  const [active, setActive] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const filled = variant === 'filled';
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    // Pull strength — how much the button moves toward cursor
+    const pullX = (e.clientX - centerX) * 0.15;
+    const pullY = (e.clientY - centerY) * 0.25;
+    setOffset({ x: pullX, y: pullY });
+  };
+
+  const handleMouseLeave = () => {
+    setHovered(false);
+    setActive(false);
+    setOffset({ x: 0, y: 0 });
+  };
+
   return (
-    <a
+    <motion.a
+      ref={buttonRef}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setActive(false); }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onMouseDown={() => setActive(true)}
       onMouseUp={() => setActive(false)}
+      animate={{
+        x: offset.x,
+        y: offset.y,
+        scale: active ? 0.97 : 1,
+      }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
       style={{
         flex: 1,
         display: 'flex',
@@ -464,14 +508,12 @@ function CTAButton({ href, variant, children }: { href: string; variant: 'filled
         fontWeight: 600,
         textDecoration: 'none',
         cursor: 'pointer',
-        transform: active ? 'scale(0.98)' : 'scale(1)',
-        transition: 'background 0.15s ease, opacity 0.15s ease, transform 0.1s ease',
         ...(filled
           ? { background: hovered ? '#d4993a' : 'var(--accent)', color: '#09090b', border: 'none' }
-          : { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', opacity: hovered ? 0.7 : 1 }),
+          : { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', opacity: hovered ? 0.8 : 1 }),
       }}
     >
       {children}
-    </a>
+    </motion.a>
   );
 }

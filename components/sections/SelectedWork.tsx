@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -32,15 +32,54 @@ export default function SelectedWork() {
   const ref    = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
+  const { scrollYProgress: bgScroll } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const bgY = useTransform(bgScroll, [0, 1], [60, -60]);
+
   return (
     <section
       ref={ref}
       style={{
+        position: 'relative',
         maxWidth: 960,
         margin: '0 auto',
         padding: '80px 24px 64px',
       }}
     >
+      {/* Background architectural text */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+        }}
+      >
+        <motion.div
+          style={{
+            y: bgY,
+            fontFamily: 'var(--font-serif)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(10rem, 22vw, 20rem)',
+            fontWeight: 400,
+            lineHeight: 0.85,
+            letterSpacing: '-0.04em',
+            WebkitTextStroke: '1px rgba(255,255,255,0.03)',
+            WebkitTextFillColor: 'transparent',
+            color: 'transparent',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          NIKHIL
+        </motion.div>
+      </div>
+
       {/* Label */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -48,8 +87,12 @@ export default function SelectedWork() {
         transition={{ duration: 0.6, ease: EASE }}
         style={{ marginBottom: 32 }}
       >
-        <span className="section-label">Selected Work</span>
+        <span className="section-label" style={{ position: 'relative', zIndex: 1 }}>Selected Work</span>
       </motion.div>
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <LineWipe inView={inView} />
+      </div>
 
       {/* Heading */}
       <motion.h2
@@ -57,6 +100,8 @@ export default function SelectedWork() {
         animate={inView ? { opacity: 1, y: 0 } : {}}
         transition={{ delay: 0.1, duration: 0.6, ease: EASE }}
         style={{
+          position: 'relative',
+          zIndex: 1,
           fontFamily: 'var(--font-serif)',
           fontStyle: 'italic',
           fontSize: 'clamp(2.2rem, 4vw, 3.5rem)',
@@ -73,6 +118,8 @@ export default function SelectedWork() {
       {/* Asymmetric bento grid */}
       <div
         style={{
+          position: 'relative',
+          zIndex: 1,
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gridTemplateRows: 'auto auto',
@@ -99,6 +146,15 @@ function ProjectCard({
   inView: boolean;
 }) {
   const cardRef  = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"],
+  });
+  
+  // Featured card moves slightly slower, others slightly faster
+  const speed = project.featured ? 15 : -10 + (index * 8);
+  const y = useTransform(scrollYProgress, [0, 1], [speed, -speed]);
 
   const gridStyle: React.CSSProperties = project.featured
     ? { gridColumn: '1 / span 2', gridRow: '1 / span 2' }
@@ -110,7 +166,7 @@ function ProjectCard({
       initial={{ opacity: 0, y: 16 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: 0.15 + index * 0.08, duration: 0.55, ease: EASE }}
-      style={gridStyle}
+      style={{ ...gridStyle, y }}
     >
       <CardInner project={project} featured={project.featured} />
     </motion.div>
@@ -233,5 +289,22 @@ function CardInner({ project, featured }: { project: Project; featured: boolean 
         ))}
       </div>
     </div>
+  );
+}
+
+function LineWipe({ inView }: { inView: boolean }) {
+  return (
+    <motion.div
+      initial={{ scaleX: 0 }}
+      animate={inView ? { scaleX: 1 } : { scaleX: 0 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        height: 1,
+        background: 'linear-gradient(90deg, transparent, var(--accent), transparent)',
+        transformOrigin: 'left',
+        marginBottom: 48,
+        opacity: 0.4,
+      }}
+    />
   );
 }

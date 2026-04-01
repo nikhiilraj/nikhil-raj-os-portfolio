@@ -13,10 +13,15 @@ import ContactApp from '@/components/apps/ContactApp';
 import SelectedWork from '@/components/sections/SelectedWork';
 import Currently from '@/components/sections/Currently';
 import Footer from '@/components/sections/Footer';
+import ScrollProgress from '@/components/ui/ScrollProgress';
 
 const ParticleField = dynamic(() => import('@/components/background/ParticleField'), { ssr: false });
 
 export default function Desktop() {
+  const anyOpen = useStore((s) =>
+    Object.values(s.windows).some((w) => w.isOpen && !w.isMinimized),
+  );
+
   return (
     <div className="fixed inset-0 overflow-hidden" style={{ background: 'var(--bg)' }}>
       {/* Skip to main content (accessibility) */}
@@ -42,6 +47,7 @@ export default function Desktop() {
 
       {/* OS Chrome */}
       <Menubar />
+      {!anyOpen && <ScrollProgress />}
 
       {/* App Windows */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 100, pointerEvents: 'none' }}>
