@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await resend.emails.send({
       from: 'Portfolio Contact <onboarding@resend.dev>',
-      to: ['raj.nikhil.tech@gmail.com'],
+      to: ['nikhil4rajj@gmail.com'],
       subject: `💬 New message from your portfolio — messages.app`,
       html: `
         <div style="font-family: 'Courier New', monospace; background: #0a0a0c; color: #e2e2e2; padding: 32px; border-radius: 10px; max-width: 560px;">
