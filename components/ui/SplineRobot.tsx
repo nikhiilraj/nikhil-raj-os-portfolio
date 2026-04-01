@@ -27,9 +27,35 @@ export default function SplineRobot() {
     });
   }, [isWide]);
 
-  const handleLoad = useCallback(() => {
-    // Small delay to ensure scene is fully rendered before revealing
-    setTimeout(() => setLoaded(true), 200);
+  const handleLoad = useCallback((splineApp: any) => {
+    // Hide the Spline watermark
+    setTimeout(() => {
+      // The watermark is rendered as an <a> tag with the Spline logo
+      // inside the container. Find it and hide it.
+      if (containerRef.current) {
+        const logos = containerRef.current.querySelectorAll('a[href*="spline"]');
+        logos.forEach((el: Element) => {
+          (el as HTMLElement).style.display = 'none';
+        });
+        // Also check for any img/svg with spline branding
+        const allLinks = containerRef.current.querySelectorAll('a');
+        allLinks.forEach((el: Element) => {
+          const href = el.getAttribute('href') || '';
+          if (href.includes('spline')) {
+            (el as HTMLElement).style.display = 'none';
+          }
+        });
+      }
+      // Also try shadow DOM approach
+      const viewer = containerRef.current?.querySelector('spline-viewer');
+      if (viewer?.shadowRoot) {
+        const logo =
+          (viewer.shadowRoot.querySelector('#logo') as HTMLElement | null) ??
+          (viewer.shadowRoot.querySelector('a[href*="spline.design"]') as HTMLElement | null);
+        if (logo) logo.style.display = 'none';
+      }
+      setLoaded(true);
+    }, 300);
   }, []);
 
   if (!isWide) return null;
@@ -46,7 +72,7 @@ export default function SplineRobot() {
       transition={{ duration: 1.2, ease: EASE }}
       style={{
         width: 300,
-        height: 360,
+        height: 396,
         position: 'relative',
         flexShrink: 0,
         // Prevent the Spline canvas from capturing all pointer events
@@ -89,18 +115,30 @@ export default function SplineRobot() {
         }}
       />
 
-      {/* Spline canvas */}
+      {/* Spline canvas — clipped to hide watermark */}
       {SplineComp && (
-        <SplineComp
-          scene={SPLINE_URL}
-          onLoad={handleLoad}
+        <div
           style={{
             width: '100%',
             height: '100%',
             position: 'relative',
             zIndex: 1,
+            overflow: 'hidden',
+            // Clip 36px from the bottom where the watermark sits
+            clipPath: 'inset(0 0 36px 0)',
           }}
-        />
+        >
+          <div style={{ width: '100%', height: 'calc(100% + 36px)' }}>
+            <SplineComp
+              scene={SPLINE_URL}
+              onLoad={handleLoad}
+              style={{
+                width: '100%',
+                height: '100%',
+              }}
+            />
+          </div>
+        </div>
       )}
     </motion.div>
   );

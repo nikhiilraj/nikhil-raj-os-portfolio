@@ -170,3 +170,22 @@ html, body {
   vertical-align: text-bottom;
   border-radius: 1px;
 }
+
+/* Hide the "Built with Spline" watermark badge (::part fallback) */
+spline-viewer::part(logo) {
+  display: none !important;
+}
+
+/* ── Hide Spline watermark ───────────────────────────────── */
+[data-spline-watermark],
+canvas + a[href*="spline"],
+div[style*="spline"] > a,
+a[href*="spline.design"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+}
