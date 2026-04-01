@@ -115,16 +115,20 @@ export default function SplineRobot() {
         }}
       />
 
-      {/* Spline canvas — clipped to hide watermark */}
+      {/* Spline canvas — wider than the layout box so arms aren't clipped on the sides.
+          Absolutely centered so the layout footprint stays at 300px.
+          overflow+clipPath only hides the 36px watermark strip at the bottom. */}
       {SplineComp && (
         <div
           style={{
-            width: '100%',
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 520,
             height: '100%',
-            position: 'relative',
             zIndex: 1,
             overflow: 'hidden',
-            // Clip 36px from the bottom where the watermark sits
             clipPath: 'inset(0 0 36px 0)',
           }}
         >
