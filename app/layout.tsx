@@ -60,6 +60,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${jetbrainsMono.variable} ${instrumentSerif.variable} ${plusJakartaSans.variable} h-full`}
     >
       <body className="h-full overflow-hidden">
+        <head>
+          <link rel="preload" href="/robot.splinecode" as="fetch" crossOrigin="anonymous" />
+        </head>
         {children}
         <Analytics />
         <SpeedInsights />

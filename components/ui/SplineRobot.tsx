@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const SPLINE_URL = 'https://prod.spline.design/s55GCKEHaPp-hlNV/scene.splinecode';
+const SPLINE_URL = '/robot.splinecode';
 
 export default function SplineRobot() {
   const [loaded, setLoaded] = useState(false);
