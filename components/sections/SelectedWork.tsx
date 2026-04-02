@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { ParticleCard, GlobalSpotlight, useMobileDetection } from '@/components/reactbits/MagicBento';
 import CircuitDivider from '@/components/ui/CircuitDivider';
+import { playSectionTransition, playCardHover } from '@/lib/sounds';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -35,6 +36,12 @@ export default function SelectedWork() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useMobileDetection();
+
+  import('react').then((React) => {
+    React.useEffect(() => {
+      if (inView) playSectionTransition();
+    }, [inView]);
+  });
 
   const { scrollYProgress: bgScroll } = useScroll({
     target: ref,
@@ -246,10 +253,15 @@ function CardInner({ project, featured }: { project: Project; featured: boolean 
     e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
   };
 
+  const handleMouseEnter = () => {
+    playCardHover();
+  };
+
   return (
     <div
       ref={ref}
       onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       className="terminal-spotlight"
       style={{
         height: '100%',

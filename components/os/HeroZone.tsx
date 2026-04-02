@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { bio } from '@/lib/data';
+import { useStore } from '@/lib/store';
+import { playKeyTick, playCopySound, playDockClick, playCommandEnter, playPaperShuffle } from '@/lib/sounds';
 
 const SplineRobot = dynamic(() => import('@/components/ui/SplineRobot'), {
   ssr: false,
@@ -18,6 +20,7 @@ type TermLine =
   | { kind: 'out';    text: string }
   | { kind: 'status' }
   | { kind: 'link';   text: string; href: string }
+  | { kind: 'copy';   text: string; value: string }
   | { kind: 'blank' };
 
 const STATIC_LINES: TermLine[] = [
@@ -33,6 +36,7 @@ const STATIC_LINES: TermLine[] = [
   { kind: 'cmd',    text: 'links' },
   { kind: 'link',   text: 'github.com/nikhilraj ↗', href: bio.github },
   { kind: 'link',   text: 'resume.pdf ↗',            href: bio.resume },
+  { kind: 'copy',   text: `${bio.email} ⎘`,           value: bio.email },
 ];
 
 // ── Easter egg command definitions ─────────────────────────────────────────────
@@ -41,11 +45,11 @@ type EggEntry =
   | { kind: 'output'; text: string }
   | { kind: 'error';  text: string };
 
-const COMMANDS: Record<string, (email: string) => EggEntry[]> = {
+const COMMANDS: Record<string, () => EggEntry[]> = {
   help:   () => [{ kind: 'output', text: 'available commands: whoami, hire, clear' }],
   whoami: () => [{ kind: 'output', text: 'Nikhil Raj — full stack developer' }],
 
-  hire: (email) => [{ kind: 'output', text: `opening email client for ${email}…` }],
+  hire: () => [{ kind: 'output', text: `opening messages.app…` }],
 };
 
 // ── Root — stays mounted so ScrollCanvas can dim it as overlay backdrop ───────
@@ -188,6 +192,7 @@ function NameDisplay() {
 // ── Terminal card with spotlight border + easter egg ──────────────────────────
 function TerminalCard() {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const openWindow = useStore((s) => s.openWindow);
 
   // ── Spotlight border mouse tracking ──────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -219,18 +224,20 @@ function TerminalCard() {
           const next: EggEntry[] = [...h, { kind: 'input', text: inputBuf }];
           if (cmd === 'clear') return [];
           if (cmd === 'hire') {
-            setTimeout(() => { window.location.href = `mailto:${bio.email}`; }, 600);
-            return [...next, ...COMMANDS.hire(bio.email)];
+            setTimeout(() => { playDockClick(); openWindow('contact'); }, 600);
+            return [...next, ...COMMANDS.hire()];
           }
           const fn = COMMANDS[cmd];
-          if (fn) return [...next, ...fn(bio.email)];
+          if (fn) return [...next, ...fn()];
           if (cmd !== '') return [...next, { kind: 'error', text: `command not found: ${cmd}` }];
           return next;
         });
+        playCommandEnter();
         setInputBuf('');
         return;
       }
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        playKeyTick();
         setInputBuf((b) => b + e.key);
       }
     };
@@ -406,8 +413,8 @@ function TerminalCard() {
             transition={{ delay: 1.3 + STATIC_LINES.length * 0.12, duration: 0.5, ease: EASE }}
             style={{ display: 'flex', gap: 10, marginTop: 20 }}
           >
-            <CTAButton href={bio.resume} variant="filled">View resume</CTAButton>
-            <CTAButton href={`mailto:${bio.email}`} variant="ghost">
+            <CTAButton href={bio.resume} variant="filled" onClick={() => playPaperShuffle()}>View resume</CTAButton>
+            <CTAButton onClick={() => { playDockClick(); openWindow('contact'); }} variant="ghost">
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -426,6 +433,7 @@ function TerminalCard() {
 // ── Static terminal line ───────────────────────────────────────────────────────
 function StaticLine({ line, index }: { line: TermLine; index: number }) {
   const [hovered, setHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
   const transition = { delay: 1.3 + index * 0.12, duration: 0.3, ease: EASE };
   const mono: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: '0.85rem' };
 
@@ -468,6 +476,36 @@ function StaticLine({ line, index }: { line: TermLine; index: number }) {
         {line.text}
       </a>
     );
+  } else if (line.kind === 'copy') {
+    content = (
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(line.value);
+          playCopySound();
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          ...mono,
+          display: 'block',
+          color: copied ? '#28c840' : 'var(--accent)',
+          cursor: 'pointer',
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          margin: 0,
+          opacity: hovered && !copied ? 0.7 : 1,
+          transition: 'color 0.2s, opacity 0.15s ease',
+          textAlign: 'left'
+        }}
+      >
+        <span style={{ paddingLeft: '1.1rem' }}>
+          {copied ? 'copied to clipboard! ✓' : line.text}
+        </span>
+      </button>
+    );
   }
 
   return (
@@ -506,8 +544,8 @@ function TrafficLights() {
 }
 
 // ── CTA buttons ────────────────────────────────────────────────────────────────
-function CTAButton({ href, variant, children }: { href: string; variant: 'filled' | 'ghost'; children: React.ReactNode }) {
-  const buttonRef = useRef<HTMLAnchorElement>(null);
+function CTAButton({ href, onClick, variant, children }: { href?: string; onClick?: (e: React.MouseEvent) => void; variant: 'filled' | 'ghost'; children: React.ReactNode }) {
+  const buttonRef = useRef<HTMLElement>(null);
   const [hovered, setHovered] = useState(false);
   const [active, setActive] = useState(false);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -530,41 +568,58 @@ function CTAButton({ href, variant, children }: { href: string; variant: 'filled
     setOffset({ x: 0, y: 0 });
   };
 
+  const commonProps = {
+    onMouseEnter: () => setHovered(true),
+    onMouseMove: handleMouseMove,
+    onMouseLeave: handleMouseLeave,
+    onMouseDown: () => setActive(true),
+    onMouseUp: () => setActive(false),
+    animate: {
+      x: offset.x,
+      y: offset.y,
+      scale: active ? 0.97 : 1,
+    },
+    transition: { type: 'spring' as const, stiffness: 400, damping: 20 },
+    style: {
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 36,
+      borderRadius: 6,
+      fontFamily: 'var(--font-sans)',
+      fontSize: 13,
+      fontWeight: 600,
+      textDecoration: 'none',
+      cursor: 'pointer',
+      ...(filled
+        ? { background: hovered ? '#d4993a' : 'var(--accent)', color: '#09090b', border: 'none' }
+        : { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', opacity: hovered ? 0.8 : 1 }),
+    } as any
+  };
+
+  if (href) {
+    return (
+      <motion.a
+        ref={buttonRef as any}
+        href={href}
+        target={href.startsWith('mailto:') ? '_self' : '_blank'}
+        rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+        onClick={onClick}
+        {...commonProps}
+      >
+        {children}
+      </motion.a>
+    );
+  }
+
   return (
-    <motion.a
-      ref={buttonRef}
-      href={href}
-      target={href.startsWith('mailto:') ? '_self' : '_blank'}
-      rel={href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-      onMouseEnter={() => setHovered(true)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseDown={() => setActive(true)}
-      onMouseUp={() => setActive(false)}
-      animate={{
-        x: offset.x,
-        y: offset.y,
-        scale: active ? 0.97 : 1,
-      }}
-      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-      style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 36,
-        borderRadius: 6,
-        fontFamily: 'var(--font-sans)',
-        fontSize: 13,
-        fontWeight: 600,
-        textDecoration: 'none',
-        cursor: 'pointer',
-        ...(filled
-          ? { background: hovered ? '#d4993a' : 'var(--accent)', color: '#09090b', border: 'none' }
-          : { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', opacity: hovered ? 0.8 : 1 }),
-      }}
+    <motion.button
+      ref={buttonRef as any}
+      onClick={onClick}
+      {...commonProps}
     >
       {children}
-    </motion.a>
+    </motion.button>
   );
 }

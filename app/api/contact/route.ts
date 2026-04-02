@@ -1,7 +1,44 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 
+// Simple in-memory rate limiting map
+// Maps IP address to { count, lastReset }
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_REQUESTS_PER_WINDOW = 3; // Max 3 messages per 5 minutes
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const userRateLimit = rateLimitMap.get(ip);
+
+  if (!userRateLimit) {
+    rateLimitMap.set(ip, { count: 1, lastReset: now });
+    return true; // Allowed
+  }
+
+  if (now - userRateLimit.lastReset > RATE_LIMIT_WINDOW_MS) {
+    // Reset window
+    rateLimitMap.set(ip, { count: 1, lastReset: now });
+    return true; // Allowed
+  }
+
+  if (userRateLimit.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false; // Rate limited
+  }
+
+  userRateLimit.count++;
+  return true; // Allowed
+}
+
 export async function POST(request: Request) {
+  // Extract user's IP for rate limiting
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const ip = forwardedFor ? forwardedFor.split(',')[0] : 'unknown-ip';
+
+  if (ip !== 'unknown-ip' && !checkRateLimit(ip)) {
+    return NextResponse.json({ error: 'Too many messages sent. Please wait a bit.' }, { status: 429 });
+  }
+
   const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { message, senderNote } = await request.json();
@@ -39,6 +76,9 @@ export async function POST(request: Request) {
 
           <p style="font-size: 11px; color: #555; margin: 0;">
             Sent via your portfolio's messages.app · ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+          </p>
+          <p style="font-size: 10px; color: #444; margin-top: 10px;">
+            Sender IP: ${ip}
           </p>
         </div>
       `,

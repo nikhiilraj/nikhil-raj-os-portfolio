@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import CircuitDivider from '@/components/ui/CircuitDivider';
+import { playSectionTransition } from '@/lib/sounds';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -14,6 +15,12 @@ const ROWS = [
 export default function Currently() {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
+
+  import('react').then((React) => {
+    React.useEffect(() => {
+      if (inView) playSectionTransition();
+    }, [inView]);
+  });
 
   return (
     <section

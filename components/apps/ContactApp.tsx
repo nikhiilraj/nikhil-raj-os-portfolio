@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { bio } from '@/lib/data';
 import Window from '@/components/os/Window';
+import { playMessageSent, playMessageReceived, playErrorSound } from '@/lib/sounds';
 
 type Message = {
   id: string;
@@ -52,16 +53,6 @@ const SOCIAL_LINKS = [
       </svg>
     ),
   },
-  {
-    label: 'Email me',
-    href: `mailto:${bio.email}`,
-    icon: (
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="4" width="20" height="16" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-    ),
-  },
 ];
 
 export default function ContactApp() {
@@ -83,6 +74,7 @@ export default function ContactApp() {
 
     const visitorMsg: Message = { id: Date.now().toString(), text, sender: 'visitor', time: now() };
     setMessages((m) => [...m, visitorMsg]);
+    playMessageSent();
 
     try {
       const res = await fetch('/api/contact', {
@@ -91,22 +83,27 @@ export default function ContactApp() {
         body: JSON.stringify({ message: text }),
       });
 
-      const reply: Message = res.ok
-        ? {
-            id: (Date.now() + 1).toString(),
-            text: "Got it! 🙌 I'll get back to you soon. In the meantime, feel free to check out my projects.",
-            sender: 'nikhil',
-            time: now(),
-          }
-        : {
-            id: (Date.now() + 1).toString(),
-            text: "Hmm, something went wrong sending that. Try emailing me directly at raj.nikhil.tech@gmail.com 🙏",
-            sender: 'nikhil',
-            time: now(),
-          };
+      let replyText = "Hmm, something went wrong sending that. Try emailing me directly at raj.nikhil.tech@gmail.com 🙏";
+      if (res.ok) {
+        replyText = "Got it! 🙌 I'll get back to you soon. In the meantime, feel free to check out my projects.";
+      } else if (res.status === 429) {
+        replyText = "Whoa, slow down! Please wait a few minutes before sending another message.";
+      }
+
+      const reply: Message = {
+        id: (Date.now() + 1).toString(),
+        text: replyText,
+        sender: 'nikhil',
+        time: now(),
+      };
 
       setMessages((m) => [...m, reply]);
-      if (res.ok) setSent(true);
+      if (res.ok) {
+        setSent(true);
+        playMessageReceived();
+      } else {
+        playErrorSound();
+      }
     } catch {
       setMessages((m) => [
         ...m,

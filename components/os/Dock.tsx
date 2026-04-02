@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import { motion, useMotionValue, useTransform, useSpring, MotionValue } from 'framer-motion';
 import { useStore, AppId } from '@/lib/store';
+import { playDockClick } from '@/lib/sounds';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -50,7 +51,7 @@ function DockIcon({
       ref={ref}
       className="relative flex flex-col items-center no-select"
       style={{ cursor: 'default' }}
-      onClick={() => openWindow(app.id)}
+      onClick={() => { playDockClick(); openWindow(app.id); }}
       onMouseEnter={() => setTooltip(true)}
       onMouseLeave={() => setTooltip(false)}
     >
