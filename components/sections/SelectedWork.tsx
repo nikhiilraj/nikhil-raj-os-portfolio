@@ -2,7 +2,6 @@
 import { useRef } from 'react';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { ParticleCard, GlobalSpotlight, useMobileDetection } from '@/components/reactbits/MagicBento';
-import CircuitDivider from '@/components/ui/CircuitDivider';
 import { playSectionTransition, playCardHover } from '@/lib/sounds';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -61,8 +60,16 @@ export default function SelectedWork() {
         overflow: 'hidden',
       }}
     >
-      {/* ── Circuit trace divider ─────────────────────────────── */}
-      <CircuitDivider />
+      {/* ── Fading Line divider ─────────────────────────────── */}
+      <div
+        aria-hidden
+        style={{
+          height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)',
+          width: '100%',
+          marginBottom: 64,
+        }}
+      />
 
       {/* ── Code rain background ──────────────────────────────── */}
       <div

@@ -26,10 +26,8 @@ export default function BootSequence({ onDone }: Props) {
   const [progress, setProgress] = useState(0);
   const [showAscii, setShowAscii] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const [started, setStarted] = useState(false);
 
   useEffect(() => {
-    if (!started) return;
     LINES.forEach((line, i) => {
       setTimeout(() => setVisibleLines((prev) => [...prev, i]), line.delay + 300);
     });
@@ -52,27 +50,14 @@ export default function BootSequence({ onDone }: Props) {
     }, 3400);
 
     return () => clearInterval(interval);
-  }, [started, onDone]);
+  }, [onDone]);
 
   const bar = Math.floor(progress / 5);
   const progressBar = '█'.repeat(bar) + '░'.repeat(20 - bar);
 
   return (
     <AnimatePresence>
-      {!started && (
-        <motion.div
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 flex items-center justify-center"
-          style={{ background: '#09090b', zIndex: 99999, cursor: 'pointer' }}
-          onClick={() => setStarted(true)}
-        >
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text-secondary)' }}>
-            <span style={{ color: 'var(--accent)' }}>▶</span> Click to boot
-          </div>
-        </motion.div>
-      )}
-
-      {started && !exiting && (
+      {!exiting && (
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
